@@ -1,51 +1,63 @@
-<form (ngSubmit)="onSubmit()" #surveyForm="ngForm">
-
-  <label>What is your current status?</label>
-  <select [(ngModel)]="survey.education_stage" name="education_stage" required>
-    <option value="">-- Select --</option>
-    <option value="high_school">High School</option>
-    <option value="university">University Student</option>
-    <option value="graduate">Graduate</option>
-  </select>
-
-  <div *ngIf="survey.education_stage === 'high_school'">
-    <p>You are eligible for the <strong>Pre-University</strong> tab.</p>
+<div class="survey-container">
+  <!-- Get Started Page (Step 0) -->
+  <div *ngIf="currentStep === 0" class="intro-screen">
+    <h2>Welcome to Trackr</h2>
+    <p>Answer a few questions to find the career opportunities that match your current situation.</p>
+    <button type="button" (click)="startSurvey()" class="get-started-btn">Get Started</button>
   </div>
 
-  <div *ngIf="survey.education_stage === 'university'">
-    <label>What year of study are you in?</label>
-    <select [(ngModel)]="survey.year_of_study" name="year_of_study" required>
-      <option value="">-- Select --</option>
-      <option [value]="1">Year 1</option>
-      <option [value]="2">Year 2</option>
-      <option [value]="3">Penultimate Year</option>
-      <option [value]="4">Final Year</option>
-    </select>
+  <!-- Survey Content (Steps 1+) -->
+  <div *ngIf="currentStep > 0">
+    <!-- Step indicator -->
+    <div class="step-indicator">
+      Step {{currentStep}} of {{totalSteps}}
+    </div>
 
-    <div *ngIf="survey.year_of_study === 4">
-      <label>Do you already have a graduate offer?</label>
-      <select [(ngModel)]="survey.has_grad_offer" name="has_grad_offer" required>
-        <option [ngValue]="true">Yes</option>
-        <option [ngValue]="false">No</option>
-      </select>
-
-      <div *ngIf="survey.has_grad_offer === false">
-        <label>Do you have previous internship experience?</label>
-        <select [(ngModel)]="survey.has_experience" name="has_experience" required>
-          <option [ngValue]="true">Yes</option>
-          <option [ngValue]="false">No</option>
+    <form (ngSubmit)="onSubmit()">
+      <!-- Step 1: Education Stage -->
+      <div *ngIf="currentStep === 1">
+        <h3>What is your current status?</h3>
+        <select [(ngModel)]="survey.education_stage" name="education_stage" required 
+                (change)="nextStep()">
+          <option value="">-- Select --</option>
+          <option value="high school">High School</option>
+          <option value="university">University</option>
+          <option value="graduate">Graduate</option>
         </select>
       </div>
-    </div>
-  </div>
+      
+      <!-- Step 2: Start Year -->
+      <div *ngIf="currentStep === 2 && survey.education_stage === 'university'">
+        <h3>When did you start your degree?</h3>
+        <select [(ngModel)]="survey.start_year" name="start_year" required
+                (change)="updateYearOfStudy(); nextStep()">
+          <option value="">-- Select --</option>
+          <option *ngFor="let year of startYearOptions" [ngValue]="year">
+            {{year}}
+          </option>
+        </select>
+      </div>
 
-  <div *ngIf="survey.education_stage === 'graduate'">
-    <label>Do you have previous internship experience?</label>
-    <select [(ngModel)]="survey.has_experience" name="has_experience_graduate" required>
-      <option [ngValue]="true">Yes</option>
-      <option [ngValue]="false">No</option>
-    </select>
+      <!-- Step 3: Graduation Year -->
+      <div *ngIf="currentStep === 3 && survey.education_stage === 'university'">
+        <h3>When will you graduate?</h3>
+        <select [(ngModel)]="survey.graduation_year" name="graduation_year" required
+                (change)="updateYearOfStudy(); nextStep()">
+          <option value="">-- Select --</option>
+          <option *ngFor="let year of graduationYearOptions" [ngValue]="year">
+            {{year}}
+          </option>
+        </select>
+      </div>
+      
+      <!-- Additional steps follow the same pattern -->
+      
+      <!-- Navigation buttons -->
+      <div class="form-navigation">
+        <button type="button" *ngIf="currentStep > 1" (click)="prevStep()">Previous</button>
+        <button type="button" *ngIf="currentStep < totalSteps" (click)="nextStep()">Next</button>
+        <button type="submit" *ngIf="currentStep === totalSteps">Submit</button>
+      </div>
+    </form>
   </div>
-
-  <button type="submit">Submit</button>
-</form>
+</div>

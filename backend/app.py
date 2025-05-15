@@ -1,11 +1,12 @@
+#!/bin/python
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from survey_processor import SurveyProcessor  # the class above in survey_processor.py
 
 app = Flask(__name__)
-CORS(app)
+CORS(app) 
 
-@app.route('/api/survey', methods=['POST'])
+@app.route('/api/survey', methods=['POST'])  # Python decorator, when we go to this endpoint, the survey function will execute
 def survey():
     data = request.json
     if not data:

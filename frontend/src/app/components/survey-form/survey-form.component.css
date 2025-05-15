@@ -1,0 +1,71 @@
+/* survey-form.component.css */
+.survey-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.step-indicator {
+  margin-bottom: 20px;
+  color: #555;
+}
+
+select {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 20px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.form-navigation {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+button {
+  padding: 10px 20px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #0069d9;
+}
+
+.intro-screen {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.intro-screen h2 {
+  margin-bottom: 20px;
+  color: #333;
+  font-size: 28px;
+}
+
+.intro-screen p {
+  margin-bottom: 30px;
+  color: #555;
+  font-size: 18px;
+  line-height: 1.5;
+}
+
+.get-started-btn {
+  padding: 12px 30px;
+  font-size: 18px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.get-started-btn:hover {
+  background: #0056b3;
+}

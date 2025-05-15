@@ -1,5 +1,4 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
 import { SurveyFormComponent } from './survey-form.component';
 
 describe('SurveyFormComponent', () => {
