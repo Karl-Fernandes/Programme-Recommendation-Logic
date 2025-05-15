@@ -1,7 +1,9 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from survey_processor import SurveyProcessor  # the class above in survey_processor.py
 
 app = Flask(__name__)
+CORS(app)
 
 @app.route('/api/survey', methods=['POST'])
 def survey():

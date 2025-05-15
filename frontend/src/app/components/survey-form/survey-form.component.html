@@ -1,0 +1,51 @@
+<form (ngSubmit)="onSubmit()" #surveyForm="ngForm">
+
+  <label>What is your current status?</label>
+  <select [(ngModel)]="survey.education_stage" name="education_stage" required>
+    <option value="">-- Select --</option>
+    <option value="high_school">High School</option>
+    <option value="university">University Student</option>
+    <option value="graduate">Graduate</option>
+  </select>
+
+  <div *ngIf="survey.education_stage === 'high_school'">
+    <p>You are eligible for the <strong>Pre-University</strong> tab.</p>
+  </div>
+
+  <div *ngIf="survey.education_stage === 'university'">
+    <label>What year of study are you in?</label>
+    <select [(ngModel)]="survey.year_of_study" name="year_of_study" required>
+      <option value="">-- Select --</option>
+      <option [value]="1">Year 1</option>
+      <option [value]="2">Year 2</option>
+      <option [value]="3">Penultimate Year</option>
+      <option [value]="4">Final Year</option>
+    </select>
+
+    <div *ngIf="survey.year_of_study === 4">
+      <label>Do you already have a graduate offer?</label>
+      <select [(ngModel)]="survey.has_grad_offer" name="has_grad_offer" required>
+        <option [ngValue]="true">Yes</option>
+        <option [ngValue]="false">No</option>
+      </select>
+
+      <div *ngIf="survey.has_grad_offer === false">
+        <label>Do you have previous internship experience?</label>
+        <select [(ngModel)]="survey.has_experience" name="has_experience" required>
+          <option [ngValue]="true">Yes</option>
+          <option [ngValue]="false">No</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="survey.education_stage === 'graduate'">
+    <label>Do you have previous internship experience?</label>
+    <select [(ngModel)]="survey.has_experience" name="has_experience_graduate" required>
+      <option [ngValue]="true">Yes</option>
+      <option [ngValue]="false">No</option>
+    </select>
+  </div>
+
+  <button type="submit">Submit</button>
+</form>
