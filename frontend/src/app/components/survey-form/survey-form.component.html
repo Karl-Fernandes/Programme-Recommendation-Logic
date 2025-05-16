@@ -1,63 +1,162 @@
 <div class="survey-container">
-  <!-- Get Started Page (Step 0) -->
-  <div *ngIf="currentStep === 0" class="intro-screen">
+  <!-- Get Started Page -->
+  <div *ngIf="isIntroStep()" class="intro-screen">
     <h2>Welcome to Trackr</h2>
     <p>Answer a few questions to find the career opportunities that match your current situation.</p>
     <button type="button" (click)="startSurvey()" class="get-started-btn">Get Started</button>
   </div>
 
-  <!-- Survey Content (Steps 1+) -->
-  <div *ngIf="currentStep > 0">
-    <!-- Step indicator -->
-    <div class="step-indicator">
-      Step {{currentStep}} of {{totalSteps}}
+  <!-- Dynamic Survey Content -->
+  <div *ngIf="!isIntroStep()">
+    <!-- Simpler alternative -->
+    <div *ngIf="!loading && !error && currentStep !== 'final'" class="step-indicator">
+      <span *ngIf="isNumberStep()">Question {{currentStep}}</span>
+      <span *ngIf="isStringStep() && currentStep !== 'final'">{{currentQuestion}}</span>
     </div>
 
-    <form (ngSubmit)="onSubmit()">
-      <!-- Step 1: Education Stage -->
-      <div *ngIf="currentStep === 1">
-        <h3>What is your current status?</h3>
-        <select [(ngModel)]="survey.education_stage" name="education_stage" required 
-                (change)="nextStep()">
-          <option value="">-- Select --</option>
-          <option value="high school">High School</option>
-          <option value="university">University</option>
-          <option value="graduate">Graduate</option>
-        </select>
-      </div>
+    <!-- Loading State -->
+    <div *ngIf="loading" class="loading-container">
+      <p>Loading...</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error" class="error-container">
+      <p class="error-message">{{error}}</p>
+      <button (click)="retry()" class="retry-button">Try Again</button>
+    </div>
+
+    <!-- Dynamic Question Form -->
+    <form *ngIf="!loading && !error && currentQuestion && currentStep !== 'final'" 
+          (submit)="$event.preventDefault(); nextStep()">
       
-      <!-- Step 2: Start Year -->
-      <div *ngIf="currentStep === 2 && survey.education_stage === 'university'">
-        <h3>When did you start your degree?</h3>
-        <select [(ngModel)]="survey.start_year" name="start_year" required
-                (change)="updateYearOfStudy(); nextStep()">
+      <h3>{{currentQuestion}}</h3>
+
+      <!-- Select Type Question -->
+      <div *ngIf="questionType === 'select'">
+        <select [(ngModel)]="surveyData.education_stage" name="selectAnswer" required>
           <option value="">-- Select --</option>
-          <option *ngFor="let year of startYearOptions" [ngValue]="year">
-            {{year}}
+          <option *ngFor="let option of options" [value]="option">
+            {{ option === 'university' ? 'Attending University' : 
+               option === 'graduate' ? 'Graduated University' : 
+               option === 'high school' ? 'High School' : option }}
           </option>
         </select>
       </div>
 
-      <!-- Step 3: Graduation Year -->
-      <div *ngIf="currentStep === 3 && survey.education_stage === 'university'">
-        <h3>When will you graduate?</h3>
-        <select [(ngModel)]="survey.graduation_year" name="graduation_year" required
-                (change)="updateYearOfStudy(); nextStep()">
-          <option value="">-- Select --</option>
-          <option *ngFor="let year of graduationYearOptions" [ngValue]="year">
-            {{year}}
-          </option>
-        </select>
+      <!-- Year Selection Type -->
+      <div *ngIf="questionType === 'year_selection'">
+        <div class="form-group">
+          <label>When did you start your degree?</label>
+          <select [(ngModel)]="surveyData.start_year" name="start_year" required>
+            <option value="">-- Select --</option>
+            <option *ngFor="let year of startYearOptions" [ngValue]="year">{{year}}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>When will you graduate?</label>
+          <select [(ngModel)]="surveyData.graduation_year" name="graduation_year" required>
+            <option value="">-- Select --</option>
+            <option *ngFor="let year of graduationYearOptions" [ngValue]="year">{{year}}</option>
+          </select>
+        </div>
+
+        <div *ngIf="hasPlacementOption" class="checkbox-container">
+          <label>
+            <input type="checkbox" [(ngModel)]="surveyData.has_placement" name="has_placement">
+            I have an industrial placement year in my course
+          </label>
+        </div>
       </div>
-      
-      <!-- Additional steps follow the same pattern -->
-      
-      <!-- Navigation buttons -->
+
+      <!-- Boolean Type Question -->
+      <div *ngIf="questionType === 'boolean'" class="radio-container">
+        <ng-container *ngIf="currentStep === 3">
+          <label>
+            <input type="radio" [(ngModel)]="surveyData.has_spring_weeks" name="booleanAnswer" [value]="true">
+            Yes
+          </label>
+          <label>
+            <input type="radio" [(ngModel)]="surveyData.has_spring_weeks" name="booleanAnswer" [value]="false">
+            No
+          </label>
+        </ng-container>
+
+        <ng-container *ngIf="currentStep === 4">
+          <label>
+            <input type="radio" [(ngModel)]="surveyData.converted_spring_to_internship" name="booleanAnswer" [value]="true">
+            Yes
+          </label>
+          <label>
+            <input type="radio" [(ngModel)]="surveyData.converted_spring_to_internship" name="booleanAnswer" [value]="false">
+            No
+          </label>
+        </ng-container>
+
+        <ng-container *ngIf="currentStep === 'internship_experience'">
+          <label>
+            <input type="radio" [(ngModel)]="surveyData.has_experience" name="booleanAnswer" [value]="true">
+            Yes
+          </label>
+          <label>
+            <input type="radio" [(ngModel)]="surveyData.has_experience" name="booleanAnswer" [value]="false">
+            No
+          </label>
+        </ng-container>
+
+        <ng-container *ngIf="currentStep === 'grad_offer'">
+          <label>
+            <input type="radio" [(ngModel)]="surveyData.has_grad_offer" name="booleanAnswer" [value]="true">
+            Yes
+          </label>
+          <label>
+            <input type="radio" [(ngModel)]="surveyData.has_grad_offer" name="booleanAnswer" [value]="false">
+            No
+          </label>
+        </ng-container>
+      </div>
+
+      <!-- Navigation Buttons -->
       <div class="form-navigation">
-        <button type="button" *ngIf="currentStep > 1" (click)="prevStep()">Previous</button>
-        <button type="button" *ngIf="currentStep < totalSteps" (click)="nextStep()">Next</button>
-        <button type="submit" *ngIf="currentStep === totalSteps">Submit</button>
+        <button type="button" *ngIf="currentStep !== 1" (click)="prevStep()">Previous</button>
+        <button type="button" (click)="nextStep()">Next</button>
       </div>
     </form>
-  </div>
+
+    <!-- Final Step (Submit) -->
+    <div *ngIf="currentStep === 'final'" class="final-step">
+      <h2 class="completion-heading">Thank you for providing your information!</h2>
+      <p class="completion-text">Click submit to see your personalized career recommendations.</p>
+      <button type="button" (click)="submitSurvey()" class="submit-button">Submit</button>
+    </div>
+
+    <!-- Results Display with Improved Styling -->
+    <div *ngIf="eligibilityResult" class="result-container">
+      <div class="results-header">
+        <h2>Your Career Recommendations</h2>
+        <p class="results-subtitle">Based on your education stage and experience</p>
+      </div>
+      
+      <div class="primary-recommendation">
+        <div class="recommendation-badge">Primary Recommendation</div>
+        <h3>{{eligibilityResult.primary_tab}}</h3>
+        <p *ngIf="eligibilityResult.commentary[eligibilityResult.primary_tab]" 
+           class="recommendation-details">
+          {{eligibilityResult.commentary[eligibilityResult.primary_tab]}}
+        </p>
+      </div>
+      
+      <div class="secondary-recommendations" *ngIf="eligibilityResult.secondary_tabs && eligibilityResult.secondary_tabs.length > 0">
+        <h3>Additional Recommendations</h3>
+        <div class="recommendation-card" *ngFor="let tab of eligibilityResult.secondary_tabs">
+          <h4>{{tab}}</h4>
+          <p *ngIf="eligibilityResult.commentary[tab]">{{eligibilityResult.commentary[tab]}}</p>
+        </div>
+      </div>
+      
+      <div class="recommendation-actions">
+        <button type="button" class="action-button primary">Explore Opportunities</button>
+        <button type="button" class="action-button secondary">Save Recommendations</button>
+      </div>
+    </div>
 </div>

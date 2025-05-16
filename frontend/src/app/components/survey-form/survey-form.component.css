@@ -69,3 +69,204 @@ button:hover {
 .get-started-btn:hover {
   background: #0056b3;
 }
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.checkbox-container {
+  margin-top: 25px;
+}
+
+.checkbox-container label {
+  display: flex;
+  align-items: center;
+  font-weight: normal;
+}
+
+.checkbox-container input {
+  margin-right: 10px;
+}
+
+.next-button {
+  margin-top: 15px;
+}
+
+/* Final step styling */
+.final-step {
+  text-align: center;
+  padding: 30px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.completion-heading {
+  color: #2c3e50;
+  margin-bottom: 15px;
+  font-size: 24px;
+}
+
+.completion-text {
+  color: #555;
+  margin-bottom: 25px;
+  font-size: 16px;
+}
+
+.submit-button {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 12px 28px;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.submit-button:hover {
+  background-color: #388E3C;
+}
+
+/* Results container styling */
+.result-container {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  padding: 25px;
+  margin-top: 30px;
+}
+
+.results-header {
+  text-align: center;
+  border-bottom: 1px solid #e1e4e8;
+  padding-bottom: 20px;
+  margin-bottom: 25px;
+}
+
+.results-header h2 {
+  color: #2c3e50;
+  margin-bottom: 8px;
+  font-size: 28px;
+}
+
+.results-subtitle {
+  color: #6c757d;
+  font-size: 16px;
+}
+
+.primary-recommendation {
+  background-color: #e8f5e9;
+  border-left: 4px solid #4CAF50;
+  padding: 20px;
+  border-radius: 4px;
+  margin-bottom: 30px;
+  position: relative;
+}
+
+.recommendation-badge {
+  position: absolute;
+  top: -10px;
+  left: 20px;
+  background-color: #4CAF50;
+  color: white;
+  padding: 5px 12px;
+  font-size: 12px;
+  border-radius: 15px;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+.primary-recommendation h3 {
+  margin-top: 15px;
+  color: #2c3e50;
+  font-size: 20px;
+}
+
+.recommendation-details {
+  color: #444;
+  margin-top: 10px;
+  line-height: 1.5;
+}
+
+.secondary-recommendations {
+  margin-top: 30px;
+}
+
+.secondary-recommendations h3 {
+  font-size: 18px;
+  color: #2c3e50;
+  margin-bottom: 15px;
+}
+
+.recommendation-card {
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  padding: 18px;
+  margin-bottom: 15px;
+  border-left: 3px solid #007bff;
+}
+
+.recommendation-card h4 {
+  color: #2c3e50;
+  margin-top: 0;
+  margin-bottom: 8px;
+  font-size: 18px;
+}
+
+.recommendation-card p {
+  color: #555;
+  margin-bottom: 0;
+  line-height: 1.5;
+}
+
+.recommendation-actions {
+  margin-top: 30px;
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.action-button {
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+.action-button.primary {
+  background-color: #007bff;
+  color: white;
+  border: none;
+}
+
+.action-button.primary:hover {
+  background-color: #0056b3;
+}
+
+.action-button.secondary {
+  background-color: transparent;
+  color: #007bff;
+  border: 1px solid #007bff;
+}
+
+.action-button.secondary:hover {
+  background-color: rgba(0, 123, 255, 0.1);
+}
+
+@media (max-width: 600px) {
+  .recommendation-actions {
+    flex-direction: column;
+  }
+  
+  .action-button {
+    width: 100%;
+  }
+}

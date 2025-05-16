@@ -9,11 +9,15 @@ import { EligibilityResult } from '../models/eligibilty-result.model';
   providedIn: 'root'
 })
 export class SurveyService {
-  private apiUrl = 'http://127.0.0.1:5000/api/survey';
+  private apiUrl = 'http://127.0.0.1:5000/api';
 
   constructor(private http: HttpClient) {}
 
-  submitSurvey(data: SurveyResponse): Observable<EligibilityResult> {
-    return this.http.post<EligibilityResult>(this.apiUrl, data);
+  getNextStep(data: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/survey/step`, data);
+  }
+
+  submitSurvey(data: any): Observable<EligibilityResult> {
+    return this.http.post<EligibilityResult>(`${this.apiUrl}/survey/submit`, data);
   }
 }

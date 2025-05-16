@@ -195,11 +195,35 @@ class SurveyProcessor:
             "commentary": self.commentary
         }
     
+    
+    
     def get_next_step(self):
         """Determine the next question to ask based on current answers"""
-        # Get previous_steps from data if available
-        previous_steps = self.data.get('previous_steps', [])
+        # Check if this is a request to go back to the previous step
+        is_previous_request = self.data.get('is_previous', False)
         
+        # If going back, check for the explicit previous step first, then fall back to the history
+        if is_previous_request:
+            # Get explicit previous step if provided
+            previous_step = self.data.get('previous_step')
+            
+            if previous_step is not None:
+                print(f"Navigating to explicit previous step: {previous_step}")
+                # Return the appropriate question for that step
+                return self.get_step_question(previous_step)
+                
+            # Fall back to previous_steps array if explicit step not provided
+            previous_steps = self.data.get('previous_steps', [])
+            if previous_steps:
+                previous_step = previous_steps[-1]
+                print(f"Navigating to previous step from history: {previous_step}")
+                return self.get_step_question(previous_step)
+                
+            # No previous step info available
+            print("No previous step information available")
+            return self.get_step_question(1)  # Default to step 1
+        
+        # Regular next step logic
         current_step = self.data.get('current_step', 0)
         education_stage = self.data.get('education_stage', '')
         start_year = self.data.get('start_year')
@@ -295,6 +319,64 @@ class SurveyProcessor:
                 
         # End of survey
         return {'next_step': 'final'}
+    
+    def get_step_question(self, step):
+        """Return the appropriate question for a specific step"""
+        education_stage = self.data.get('education_stage', '')
+        year_of_study = self.calculate_year_of_study()
+        
+        # Step 1 (Education Stage)
+        if step == 1:
+            return {
+                'next_step': 1,
+                'question': 'What stage of education are you in?',
+                'type': 'select',
+                'options': ['high school', 'university', 'graduate']
+            }
+        
+        # Step 2 (University Timeline)
+        elif step == 2 and education_stage == 'university':
+            return {
+                'next_step': 2,
+                'question': 'When did you start your degree and when will you graduate?',
+                'type': 'year_selection',
+                'has_placement': True
+            }
+        
+        # Step 3 (Spring Weeks)
+        elif step == 3:
+            return {
+                'next_step': 3,
+                'question': 'Have you completed any prior Spring Weeks?',
+                'type': 'boolean'
+            }
+        
+        # Step 4 (Spring Week Conversion)
+        elif step == 4:
+            return {
+                'next_step': 4,
+                'question': 'Did you convert any of these into a Summer Internship offer?',
+                'type': 'boolean'
+            }
+        
+        # Internship Experience step
+        elif step == 'internship_experience':
+            return {
+                'next_step': 'internship_experience',
+                'question': 'Have you completed any prior relevant Summer Internships or Full-Time work?',
+                'type': 'boolean'
+            }
+        
+        # Graduate Offer step
+        elif step == 'grad_offer':
+            return {
+                'next_step': 'grad_offer',
+                'question': 'Do you have a graduate offer already?',
+                'type': 'boolean'
+            }
+        
+        # Default fallback if the step doesn't match any known step
+        return {'next_step': 1, 'error': 'Invalid step requested'}
     
     def calculate_year_of_study(self):
         start_year = self.data.get('start_year')
