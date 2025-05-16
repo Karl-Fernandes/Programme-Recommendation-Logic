@@ -17,5 +17,27 @@ def survey():
     
     return jsonify(result), 200
 
+@app.route('/api/survey/step', methods=['POST'])
+def survey_step():
+    data = request.json
+    if not data:
+        return jsonify({"error": "No input data provided"}), 400
+    
+    processor = SurveyProcessor(data)
+    next_step_info = processor.get_next_step()
+    
+    return jsonify(next_step_info), 200
+
+@app.route('/api/survey/submit', methods=['POST'])
+def survey_submit():
+    data = request.json
+    if not data:
+        return jsonify({"error": "No input data provided"}), 400
+    
+    processor = SurveyProcessor(data)
+    result = processor.process()
+    
+    return jsonify(result), 200
+
 if __name__ == '__main__':
     app.run(debug=True)
