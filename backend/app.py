@@ -34,7 +34,17 @@ def survey_submit():
     if not data:
         return jsonify({"error": "No input data provided"}), 400
     
+    print("Survey submission received with data:")
+    print(f"- education_stage: {data.get('education_stage')}")
+    print(f"- start_year: {data.get('start_year')}")
+    print(f"- graduation_year: {data.get('graduation_year')}")
+    print(f"- year_of_study: {data.get('year_of_study')}")
+    
     processor = SurveyProcessor(data)
+    # Calculate year_of_study explicitly and check if it matches
+    calculated_yos = processor.calculate_year_of_study()
+    print(f"Calculated year_of_study: {calculated_yos} vs Provided: {data.get('year_of_study')}")
+    
     result = processor.process()
     
     return jsonify(result), 200
