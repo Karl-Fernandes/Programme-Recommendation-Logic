@@ -36,17 +36,10 @@ class SurveyProcessor:
         
         # FIX HERE: Check if graduation_year exists before calculating years_until_grad
         years_until_grad = None
-        if graduation_year is not None:
-            try:
-                years_until_grad = graduation_year - current_year
-            except:
-                # If graduation_year can't be subtracted from current_year
-                # (possibly because it's a string), try converting
-                try:
-                    years_until_grad = int(graduation_year) - current_year
-                except:
-                    years_until_grad = None
-                    print(f"Error calculating years_until_grad with graduation_year: {graduation_year}")
+        if graduation_year is not None and isinstance(graduation_year, int):
+            years_until_grad = graduation_year - current_year
+        else:
+            years_until_grad = None
 
         # Define commentary texts for reuse
         commentary_texts = {
@@ -87,7 +80,10 @@ class SurveyProcessor:
 
         elif edu_stage == 'graduate':
             # Graduated university logic
-            if has_experience:
+            has_placement_experience = self.data.get('has_placement', False)
+            has_relevant_experience = has_placement_experience or has_experience
+
+            if has_relevant_experience:
                 self.primary_tab = "Off-Cycle Internships"
                 self.secondary_tabs = ["Graduate Schemes"]
                 self.commentary = {
@@ -111,30 +107,41 @@ class SurveyProcessor:
                     self.commentary = {self.primary_tab: commentary_texts['Spring Weeks']}
                     
                 elif years_until_grad > 2:
-                    # More than 2 years out
+                    # More than 2 years out - keep your existing logic here
                     if has_placement:
                         self.primary_tab = "Industrial Placements"
-                        self.secondary_tabs = ["Spring Weeks"]
                         
-                        # Choose the right message based on year of study
-                        if year_of_study == 1:
-                            placement_commentary = ("As a first-year student interested in placements, focus on building foundational skills and experiences. "
-                                                    "Research companies, improve your CV, and gain relevant experiences through societies or projects. "
-                                                    "You'll be in a stronger position to apply for placements next year.")
-                        # Second year students - main placement application year
-                        elif year_of_study == 2:
+                        # Second year students with placement specifically need Off-Cycle Internships as secondary tab
+                        if year_of_study == 2:
+                            self.secondary_tabs = ["Off-Cycle Internships"]
                             placement_commentary = ("As a second-year student, this is the optimal time to apply for industrial placement programmes. "
                                                    "These are relatively uncompetitive because the pool of candidates is much smaller.")
-                        # Later years
+                            self.commentary = {
+                                self.primary_tab: placement_commentary,
+                                "Off-Cycle Internships": ("It is also possible to fill your industrial placement year with 2 off-cycle internships. "
+                                                        "However, these programmes are far more competitive and securing two internships that align "
+                                                        "in timing will be challenging.")
+                            }
                         else:
-                            placement_commentary = ("Although placements are typically completed after your second year, some companies offer flexible " 
-                                                   "placement opportunities for later-year students. Consider reaching out directly to companies to " 
-                                                   "inquire about placement possibilities aligned with your experience level.")
+                            # First year or later years
+                            self.secondary_tabs = ["Spring Weeks"]
                             
-                        self.commentary = {
-                            self.primary_tab: placement_commentary,
-                            "Spring Weeks": commentary_texts['Spring Weeks More Than 2']
-                        }
+                            # Choose the right message based on year of study
+                            if year_of_study == 1:
+                                placement_commentary = ("As a first-year student interested in placements, focus on building foundational skills and experiences. "
+                                                       "Research companies, improve your CV, and gain relevant experiences through societies or projects. "
+                                                       "You'll be in a stronger position to apply for placements next year.")
+                            # Later years
+                            else:
+                                placement_commentary = ("Although placements are typically completed after your second year, some companies offer flexible " 
+                                                      "placement opportunities for later-year students. Consider reaching out directly to companies to " 
+                                                      "inquire about placement possibilities aligned with your experience level.")
+                            
+
+                            self.commentary = {
+                                self.primary_tab: placement_commentary,
+                                "Spring Weeks": commentary_texts['Spring Weeks More Than 2']
+                            }
                     else:
                         self.primary_tab = "Spring Weeks"
                         self.secondary_tabs = []
@@ -143,42 +150,32 @@ class SurveyProcessor:
                 elif years_until_grad == 1:
                     # Penultimate year - doesn't matter if it's year 2 (Bachelor's) or year 3 (Master's)
                     self.primary_tab = "Summer Internships"
-                    self.secondary_tabs = ["Off-Cycle Internships"]
+                    self.secondary_tabs = ["Spring Weeks"]  # Changed from "Off-Cycle Internships"
                     self.commentary = {
                         self.primary_tab: commentary_texts['Summer Internships'],
-                        "Off-Cycle Internships": commentary_texts['Off-Cycle Internships']
+                        "Spring Weeks": ("You can become eligible for Spring Weeks by writing \"Intended Master's Degree\" on your resume. "
+                                        "These serve as a less competitive route into great roles, and act as a backup option in case you fail "
+                                        "to convert your summer internship this year. Many companies will not force you to complete the "
+                                        "Master's Degree but even if they do, it will often be a favourable outcome regardless.")
                     }
                     
                 elif years_until_grad == 2:
-                    # Two years out from graduation - could be year 1 (Bachelor's) or year 2 (Master's)
-                    # This is the Spring Weeks year
-                    self.primary_tab = "Spring Weeks"
-                    self.secondary_tabs = []
-                    self.commentary = {
-                        self.primary_tab: commentary_texts['Spring Weeks'],
-
-                    }
+                    # Two years out from graduation
                     
-                    # Special case for students with placement option who are 2 years from graduation
-                    if years_until_grad == 2 and has_placement:
+                    # Special case for year 2 students with placement option
+                    if year_of_study == 2 and has_placement:
                         self.primary_tab = "Industrial Placements"
-                        self.secondary_tabs = ["Spring Weeks"]
-                        
-                        # Choose appropriate commentary based on year of study
-                        if year_of_study == 1:
-                            placement_msg = ("As a first-year student interested in placements, focus on building foundational skills and experiences. "
-                                             "Research companies, improve your CV, and gain relevant experiences through societies or projects. "
-                                             "You'll be in a stronger position to apply for placements next year.")
-                        elif year_of_study == 2:
-                            placement_msg = commentary_texts['Industrial Placements']  # Use the existing second year message
-                        else:
-                            placement_msg = ("Although placements are typically completed after your second year, some companies offer flexible " 
-                                             "placement opportunities for later-year students. Consider reaching out directly to companies to " 
-                                             "inquire about placement possibilities aligned with your experience level.")
-                        
+                        self.secondary_tabs = ["Off-Cycle Internships"]  # <-- Changed from Spring Weeks
                         self.commentary = {
-                            self.primary_tab: placement_msg,
-                            "Spring Weeks": commentary_texts['Spring Weeks']
+                            self.primary_tab: "As a second-year student, you should now be applying for industrial placement programmes. These are relatively uncompetitive because the pool of candidates is much smaller.",
+                            "Off-Cycle Internships": "It is also possible to fill your industrial placement year with 2 off-cycle internships. However, these programmes are far more competitive and securing two internships that align in timing will be challenging."
+                        }
+                    else:
+                        # Regular spring weeks logic for other cases
+                        self.primary_tab = "Spring Weeks"
+                        self.secondary_tabs = []
+                        self.commentary = {
+                            self.primary_tab: commentary_texts['Spring Weeks']
                         }
                 elif years_until_grad == 3:
                     # Special case for Year 3 with less than 2 years until graduation
@@ -191,6 +188,9 @@ class SurveyProcessor:
                 # Final year with graduate offer
                 elif years_until_grad == 0:
                     # Final year logic
+                    has_placement_experience = self.data.get('has_placement', False)
+                    has_relevant_experience = has_experience or has_placement_experience
+
                     if has_grad_offer:
                         self.primary_tab = "Graduate Schemes"
                         self.secondary_tabs = ["Summer Internships", "Off-Cycle Internships"]
@@ -208,7 +208,7 @@ class SurveyProcessor:
                         }
                     else:
                         # Final year with no offer, check if they have experience
-                        if has_experience:
+                        if has_relevant_experience:
                             self.primary_tab = "Off-Cycle Internships"
                             self.secondary_tabs = ["Summer Internships", "Graduate Schemes"]
                             self.commentary = {
@@ -309,7 +309,13 @@ class SurveyProcessor:
             if not start_year or not graduation_year:
                 return {'next_step': 2, 'error': 'Please select both start and graduation years'}
             
-            if year_of_study >= 2:
+            # Calculate years until graduation
+            current_year = datetime.now().year
+            years_until_grad = graduation_year - current_year
+            
+            # For final year students (years_until_grad == 0) or students in at least 2nd year,
+            # continue with spring weeks questions
+            if year_of_study >= 2 or years_until_grad <= 0:
                 return {
                     'next_step': 3,
                     'question': 'Have you completed any prior Spring Weeks?',
@@ -346,7 +352,16 @@ class SurveyProcessor:
             
         # Step 5 (Internship Experience) -> Graduate Offer or Final
         elif current_step == 'internship_experience':
-            if year_of_study == 4:
+            # Calculate years until graduation
+            current_year = datetime.now().year
+            graduation_year = self.data.get('graduation_year')
+            years_until_grad = graduation_year - current_year if graduation_year else None
+            
+            # Add proper handling for None values
+            year_of_study = self.calculate_year_of_study()
+            
+            # Check if years_until_grad is None and year_of_study is None before comparing
+            if years_until_grad == 0 or (year_of_study is not None and year_of_study >= 4):
                 return {
                     'next_step': 'grad_offer',
                     'question': 'Do you have a graduate offer already?',

@@ -98,17 +98,8 @@ export class SurveyFormComponent {
   }
   
   nextStep() {
-    // Initialize previous_steps array if it doesn't exist
-    if (!this.surveyData.previous_steps) {
-      this.surveyData.previous_steps = [];
-    }
-    
-    // Only save the step if we're on a valid step (not 0 or undefined)
-    if (this.currentStep !== 0 && this.currentStep !== undefined) {
-      // Save the current step before moving to the next one
-      this.surveyData.previous_steps.push(this.currentStep);
-      console.log('Updated step history:', this.surveyData.previous_steps);
-    }
+    // Save current step before moving to the next one
+    this.surveyData.previous_step = this.currentStep;
     
     console.log('Moving to next step from', this.currentStep);
     this.getNextQuestion();
@@ -116,30 +107,12 @@ export class SurveyFormComponent {
   
   prevStep() {
     console.log('Moving back from step', this.currentStep);
-    console.log('Current step history:', this.surveyData.previous_steps);
     
-    // Handle the case when we don't have previous steps information
-    if (!this.surveyData.previous_steps || this.surveyData.previous_steps.length === 0) {
-      console.log('No previous steps recorded, defaulting to step 1');
-      // If we don't have a previous steps history, just go back to step 1
-      if (this.currentStep !== 1) {
-        this.currentStep = 1;
-        this.getNextQuestion();
-      }
-      return;
-    }
-    
-    // Instead of popping to remove the current step,
-    // we want the previous step, which should be the last entry in the array
-    const previousStep = this.surveyData.previous_steps.pop();
-    console.log(`Going back to step ${previousStep}`);
-    
-    // Send request to backend with the previous step
+    // For simplicity, we'll let the backend decide where to go
     this.loading = true;
     this.error = '';
     
     const requestData = {
-      previous_step: previousStep, // Add this to explicitly tell the backend which step to go to
       current_step: this.currentStep,
       is_previous: true,
       ...this.surveyData
@@ -181,12 +154,6 @@ export class SurveyFormComponent {
   submitSurvey() {
     this.loading = true;
     this.error = '';
-    
-    // Calculate year_of_study if needed
-    if (this.surveyData.start_year && !this.surveyData.year_of_study) {
-      const currentYear = new Date().getFullYear();
-      this.surveyData.year_of_study = currentYear - this.surveyData.start_year + 1;
-    }
     
     // Set graduated flag based on education_stage
     this.surveyData.graduated = this.surveyData.education_stage === 'graduate';
