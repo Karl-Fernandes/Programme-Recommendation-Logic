@@ -1,53 +1,58 @@
-#!/bin/python
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from survey_processor import SurveyProcessor  # the class above in survey_processor.py
+from survey_processor import SurveyProcessor
+from typing import Dict, Any
+import logging
+
+# Constants
+HTTP_OK = 200
+HTTP_BAD_REQUEST = 400
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-CORS(app) 
-
-@app.route('/api/survey', methods=['POST'])  # Python decorator, when we go to this endpoint, the survey function will execute
-def survey():
-    data = request.json
-    if not data:
-        return jsonify({"error": "No input data provided"}), 400
-    
-    processor = SurveyProcessor(data)
-    result = processor.process()
-    
-    return jsonify(result), 200
+CORS(app)
 
 @app.route('/api/survey/step', methods=['POST'])
-def survey_step():
-    data = request.json
+def survey_step() -> Dict[str, Any]:
+    """Handle survey step progression by returning the next step information."""
+    data = request.get_json(silent=True)
     if not data:
-        return jsonify({"error": "No input data provided"}), 400
-    
-    processor = SurveyProcessor(data)
-    next_step_info = processor.get_next_step()
-    
-    return jsonify(next_step_info), 200
+        logger.error("No input data provided for survey step")
+        return jsonify({"error": "No input data provided"}), HTTP_BAD_REQUEST
+
+    try:
+        processor = SurveyProcessor(data)
+        next_step_info = processor.get_next_step()
+        return jsonify(next_step_info), HTTP_OK
+    except Exception as e:
+        logger.error(f"Error processing survey step: {str(e)}")
+        return jsonify({"error": f"Failed to process survey step: {str(e)}"}), HTTP_BAD_REQUEST
 
 @app.route('/api/survey/submit', methods=['POST'])
-def survey_submit():
-    data = request.json
+def survey_submit() -> Dict[str, Any]:
+    """Process and submit survey data, returning eligibility recommendations."""
+    data = request.get_json(silent=True)
     if not data:
-        return jsonify({"error": "No input data provided"}), 400
-    
-    print("Survey submission received with data:")
-    print(f"- education_stage: {data.get('education_stage')}")
-    print(f"- start_year: {data.get('start_year')}")
-    print(f"- graduation_year: {data.get('graduation_year')}")
-    print(f"- year_of_study: {data.get('year_of_study')}")
-    
-    processor = SurveyProcessor(data)
-    # Calculate year_of_study explicitly and check if it matches
-    calculated_yos = processor.calculate_year_of_study()
-    print(f"Calculated year_of_study: {calculated_yos} vs Provided: {data.get('year_of_study')}")
-    
-    result = processor.process()
-    
-    return jsonify(result), 200
+        logger.error("No input data provided for survey submission")
+        return jsonify({"error": "No input data provided"}), HTTP_BAD_REQUEST
+
+    try:
+        processor = SurveyProcessor(data)
+        calculated_yos = processor.calculate_year_of_study()
+        logger.info(
+            f"Survey submission processed - Calculated year_of_study: {calculated_yos}, "
+            f"Provided: {data.get('year_of_study')}, "
+            f"Education stage: {data.get('education_stage')}"
+        )
+        
+        result = processor.process()
+        return jsonify(result), HTTP_OK
+    except Exception as e:
+        logger.error(f"Error processing survey submission: {str(e)}")
+        return jsonify({"error": f"Failed to process survey submission: {str(e)}"}), HTTP_BAD_REQUEST
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0', port=5000)
