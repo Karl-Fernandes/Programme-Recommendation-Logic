@@ -1,3 +1,6 @@
+type CareerPathKey = 'Summer Internships' | 'Spring Weeks' | 'Off-Cycle Internships' | 
+                     'Industrial Placements' | 'Graduate Schemes' | 'Pre-University';
+
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -169,6 +172,14 @@ export class SurveyFormComponent {
         // If result is empty or missing expected fields
         if (!result || !result.primary_tab) {
           this.error = 'No recommendations received. The server may have encountered an error processing your data.';
+        } else {
+          // Add this code to scroll to results
+          setTimeout(() => {
+            const resultElement = document.querySelector('.result-container');
+            if (resultElement) {
+              resultElement.scrollIntoView({ behavior: 'smooth' });
+            }
+          }, 100);
         }
       },
       error: (err) => {
@@ -213,5 +224,27 @@ export class SurveyFormComponent {
 
   isNumberStep(): boolean {
     return typeof this.currentStep === 'number';
+  }
+
+  // Add as a class property
+  careerPathDescriptions: Record<CareerPathKey, string> = {
+    "Summer Internships": "Summer internships are 8-10 week paid internship programmes lasting from June to August. These are typically intended for penultimate-year students and normally lead to a graduate offer at the end of the internship, contingent on good performance. Summer internships are the most effective and reliable route to receiving a full-time offer and are treated as a prerequisite for applying to off-cycle internships and graduate programmes. Summer internship programmes receive the most applicants of any tab, but they also have the highest number of available offers.",
+    
+    "Spring Weeks": "Spring weeks are 1-5 day insight programmes conducted during Spring holidays. These are typically intended for students graduating in 2 years and often lead to a summer internship offer at the end of the spring week, contingent on strong performance or post-spring week interview. Spring weeks are an excellent route into receiving a summer internship offer more than 1 year in advance, and are less dependent on previous relevant experience. Even if you don't convert a spring week, candidates with spring weeks on their resume receive almost twice as many summer internship interviews the following year.",
+    
+    "Off-Cycle Internships": "Off-cycle internships are 3-6 month paid internship programmes running at various times of the year. Due to the long-term nature of these programmes, they are typically intended for recent graduates. However, any student is eligible if you are able to take time off university or complete the internship alongside your studies. Off-cycle internships open far more sporadically as opposed to summer internships which open at the same time every year. These often lead to a graduate offer at the end of the internship, contingent of good performance - however many off-cycle internships are non-convertible.",
+    
+    "Industrial Placements": "Industrial placements are 12-month paid internship programmes, designed for students who have a year in industry as part of their degree. These programmes are far less competitive than summer internships because the pool of applicants is notably smaller, and they normally lead to a graduate offer at the end of the placement, contingent on good performance. We strongly advise any eligible candidates to apply for these available positions because they serve as a less competitive route to a full-time offer and are great for your resume if you choose to apply elsewhere.",
+    
+    "Graduate Schemes": "Graduate schemes are full-time positions designed for recent graduates. Within the competitive areas of finance (investment banking, private equity, sales & trading etc), applying to graduate schemes is unrealistically competitive unless you have numerous previous internships. Graduate schemes at less competitive companies (e.g. smaller banks, big 4) or less competitive roles (e.g. risk, audit) are more attainable, but we generally advise against applying for graduate schemes at large banks for their competitive roles.",
+    
+    "Pre-University": "The pre-university tab details every paid internship, work experience and apprenticeship programme available for high school students. The paid internships are an excellent way to build your resume as a school student, and the work experience programmes may sometimes convert to a spring week offer for when you begin university. Apprenticeships and degree apprenticeships are favourable options from a financial perspective, but often limit your ability to apply elsewhere and may pigeonhole you if you select a less desirable role."
+  };
+
+  getCareerDescription(path: string): string {
+    // Type assertion to treat path as a valid key
+    const key = path as CareerPathKey;
+    return this.careerPathDescriptions[key] || 
+      `Description for ${path} is not available`;
   }
 }

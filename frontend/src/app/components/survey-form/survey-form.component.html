@@ -137,20 +137,42 @@
         <p class="results-subtitle">Based on your education stage and experience</p>
       </div>
       
+      <!-- Update the primary recommendation section -->
       <div class="primary-recommendation">
         <div class="recommendation-badge">Primary Recommendation</div>
         <h3>{{eligibilityResult.primary_tab}}</h3>
-        <p *ngIf="eligibilityResult.commentary[eligibilityResult.primary_tab]" 
-           class="recommendation-details">
-          {{eligibilityResult.commentary[eligibilityResult.primary_tab]}}
-        </p>
+        
+        <!-- Add the preset description -->
+        <div class="recommendation-overview">
+          <p class="path-description">{{getCareerDescription(eligibilityResult.primary_tab)}}</p>
+        </div>
+        
+        <!-- Specific commentary from the survey analysis -->
+        <div class="recommendation-personalized">
+          <h4>Your Personalized Guidance:</h4>
+          <p *ngIf="eligibilityResult.commentary[eligibilityResult.primary_tab]" 
+             class="recommendation-details">
+            {{eligibilityResult.commentary[eligibilityResult.primary_tab]}}
+          </p>
+        </div>
       </div>
       
+      <!-- Update the secondary recommendations section -->
       <div class="secondary-recommendations" *ngIf="eligibilityResult.secondary_tabs && eligibilityResult.secondary_tabs.length > 0">
         <h3>Additional Recommendations</h3>
         <div class="recommendation-card" *ngFor="let tab of eligibilityResult.secondary_tabs">
           <h4>{{tab}}</h4>
-          <p *ngIf="eligibilityResult.commentary[tab]">{{eligibilityResult.commentary[tab]}}</p>
+          
+          <!-- Add the preset description -->
+          <div class="recommendation-overview">
+            <p class="path-description">{{getCareerDescription(tab)}}</p>
+          </div>
+          
+          <!-- Specific commentary from the survey analysis -->
+          <div class="recommendation-personalized" *ngIf="eligibilityResult.commentary[tab]">
+            <h4>Your Personalized Guidance:</h4>
+            <p>{{eligibilityResult.commentary[tab]}}</p>
+          </div>
         </div>
       </div>
       

@@ -141,6 +141,13 @@ label {
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   padding: 25px;
   margin-top: 30px;
+  border-top: 5px solid #4CAF50;  /* Add a distinctive colored border */
+  animation: fadeIn 0.5s ease-in;  /* Add animation for visibility */
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .results-header {
@@ -259,6 +266,31 @@ label {
 
 .action-button.secondary:hover {
   background-color: rgba(0, 123, 255, 0.1);
+}
+
+.recommendation-overview {
+  background-color: #f8f9fa;
+  padding: 15px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+}
+
+.path-description {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #333;
+}
+
+.recommendation-personalized {
+  border-left: 3px solid #5468ff;
+  padding-left: 15px;
+  margin: 20px 0;
+}
+
+.recommendation-personalized h4 {
+  color: #5468ff;
+  font-size: 1rem;
+  margin-bottom: 10px;
 }
 
 @media (max-width: 600px) {
