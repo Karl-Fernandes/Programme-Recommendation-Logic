@@ -86,10 +86,16 @@ export class SurveyFormComponent {
         
         if (response.type === 'select') {
           this.options = response.options || [];
+          this.surveyData.education_stage = '';
+
         }
         
         if (response.type === 'year_selection') {
           this.hasPlacementOption = response.has_placement === true;
+            this.surveyData.start_year = '';
+            this.surveyData.graduation_year = '';
+
+
         }
       },
       error: (err) => {

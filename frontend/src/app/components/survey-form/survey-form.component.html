@@ -1,8 +1,9 @@
 <div class="survey-container">
   <!-- Get Started Page -->
   <div *ngIf="isIntroStep()" class="intro-screen">
-    <h2>Welcome to Trackr</h2>
-    <p>Answer a few questions to find the career opportunities that match your current situation.</p>
+    <h2>New: Programme Recommendation Tool</h2>
+    <p>Our programme recommendation tool shows you exactly which early career opportunities you should apply to based on your university year and experience—helping you unlock schemes you might not have considered. 
+      Backed by deep industry insight into what actually works, it gives you an instant edge by widening your options and boosting your chances with smart, targeted advice.</p>
     <button type="button" (click)="startSurvey()" class="get-started-btn">Get Started</button>
   </div>
 
@@ -36,8 +37,8 @@
           <option value="">-- Select --</option>
           <option *ngFor="let option of options" [value]="option">
             {{ option === 'university' ? 'Attending University' : 
-               option === 'graduate' ? 'Graduated University' : 
-               option === 'high school' ? 'High School' : option }}
+              option === 'graduate' ? 'Graduated University' : 
+              option === 'high school' ? 'High School' : option }}
           </option>
         </select>
       </div>
@@ -125,9 +126,9 @@
     <!-- Final Step (Submit) -->
     <div *ngIf="currentStep === 'final'" class="final-step">
       <h2 class="completion-heading">Thank you for providing your information!</h2>
-      <p class="completion-text">Click submit to see your personalized career recommendations.</p>
+      <p class="completion-text">We have prepared our tailored application advice, and compiled the programmes we think you should be applying for.</p>
       <button type="button" class="submit-button">
-        <Span *ngIf="!eligibilityResult" (click)="submitSurvey()">Submit</Span>
+        <Span *ngIf="!eligibilityResult" (click)="submitSurvey()">See Programmes</Span>
         <Span *ngIf="eligibilityResult" (click)="resetSurvey()">Start Over</Span>
       </button>
     </div>

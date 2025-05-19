@@ -1,4 +1,5 @@
 /* survey-form.component.css */
+/* Main container */
 .survey-container {
   max-width: 800px;
   margin: 40px auto;
@@ -8,15 +9,17 @@
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 }
 
+/* Step indicator */
 .step-indicator {
   font-family: var(--font-heading);
   color: var(--trackr-light-blue);
   font-size: 16px;
-  margin-bottom: 20px;
-  padding: 10px;
+  margin-bottom: 25px;
+  padding: 10px 15px;
   background-color: var(--trackr-sky-blue);
   border-radius: 6px;
   display: inline-block;
+  font-weight: 500;
 }
 
 /* Intro screen */
@@ -29,7 +32,7 @@
   font-family: var(--font-heading);
   font-size: 32px;
   color: var(--trackr-blue);
-  margin-bottom: 20px;
+  margin-bottom: 25px;
 }
 
 .intro-screen p {
@@ -37,7 +40,7 @@
   font-size: 18px;
   color: var(--trackr-dark-blue);
   margin-bottom: 30px;
-  max-width: 600px;
+  max-width: 900px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -59,16 +62,26 @@
   box-shadow: 0 6px 12px rgba(9, 1, 73, 0.2);
 }
 
-/* Form elements */
+/* Form elements with improved spacing and alignment */
+form h3 {
+  font-family: var(--font-heading);
+  font-size: 24px;
+  color: var(--trackr-blue);
+  margin-bottom: 30px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid var(--trackr-light-grey);
+}
+
 select, 
 .form-control {
   width: 100%;
-  padding: 12px 15px;
+  max-width: 400px;
+  padding: 14px 16px;
   border: 1px solid var(--trackr-light-grey);
   border-radius: 8px;
   font-family: var(--font-body);
   font-size: 16px;
-  margin-bottom: 20px;
+  margin-bottom: 25px;
   appearance: auto;
   background-color: white;
   color: var(--trackr-navy-blue);
@@ -85,28 +98,50 @@ select:focus,
 
 /* Form groups for better spacing */
 .form-group {
-  margin-bottom: 25px;
+  margin-bottom: 30px;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
   font-weight: 500;
   color: var(--trackr-navy-blue);
+}
+
+/* Year selection spacing */
+div[class*="year_selection"] .form-group {
+  margin-bottom: 30px;
+}
+
+/* Radio button container styling */
+.radio-container {
+  display: flex;
+  gap: 40px;
+  margin-top: 15px;
+  margin-bottom: 30px;
+}
+
+.radio-container label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 16px;
 }
 
 /* Navigation buttons */
 .form-navigation {
   display: flex;
   justify-content: space-between;
-  margin-top: 30px;
+  margin-top: 40px;
 }
 
 .form-navigation button {
-  padding: 12px 24px;
+  padding: 14px 28px;
   border-radius: 8px;
   font-family: var(--font-body);
   font-size: 16px;
+  font-weight: 500;
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -125,14 +160,22 @@ select:focus,
 
 .form-navigation button:hover {
   transform: translateY(-2px);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+}
+
+.form-navigation button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 /* Final step styling */
 .final-step {
   text-align: center;
-  padding: 35px;
+  padding: 40px;
   background-color: #f8f9fa;
-  border-radius: 8px;
+  border-radius: 12px;
   margin-bottom: 30px;
   border: 1px solid var(--trackr-light-grey);
 }
@@ -141,13 +184,16 @@ select:focus,
   font-family: var(--font-heading);
   color: var(--trackr-blue);
   margin-bottom: 20px;
-  font-size: 26px;
+  font-size: 28px;
 }
 
 .completion-text {
-  color: #555;
-  margin-bottom: 25px;
-  font-size: 16px;
+  color: var(--trackr-dark-blue);
+  margin-bottom: 30px;
+  font-size: 17px;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* Submit button updated to match brand colors */
@@ -155,9 +201,9 @@ select:focus,
   background: linear-gradient(to right, var(--trackr-blue), var(--trackr-light-blue));
   color: white;
   border: none;
-  padding: 12px 28px;
+  padding: 14px 32px;
   border-radius: 8px;
-  font-size: 16px;
+  font-size: 17px;
   cursor: pointer;
   transition: all 0.3s;
   font-weight: 500;
@@ -169,179 +215,196 @@ select:focus,
   box-shadow: 0 4px 8px rgba(9, 1, 73, 0.3);
 }
 
-/* Results section */
+/* Results section - Enhanced styling */
 .result-container {
   margin-top: 40px;
-  padding: 25px;
-  border-radius: 12px;
+  padding: 35px;
+  border-radius: 16px;
   background-color: white;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  border-top: 5px solid var(--trackr-light-blue);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  animation: fadeIn 0.5s ease-in;
+  border: none; /* Remove the border-top */
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .results-header {
   text-align: center;
-  border-bottom: 1px solid #e1e4e8;
-  padding-bottom: 20px;
-  margin-bottom: 25px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  padding-bottom: 30px;
+  margin-bottom: 40px;
 }
 
 .results-header h2 {
-  color: #2c3e50;
-  margin-bottom: 8px;
-  font-size: 28px;
+  font-family: var(--font-heading);
+  color: var(--trackr-blue);
+  margin-bottom: 12px;
+  font-size: 30px;
 }
 
 .results-subtitle {
-  color: #6c757d;
-  font-size: 16px;
+  color: var(--trackr-dark-blue);
+  font-size: 17px;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
+/* Primary recommendation section - Refined green styling */
 .primary-recommendation {
-  background-color: rgba(0, 138, 160, 0.1); /* Light version of trackr-light-blue */
-  border-left: 4px solid var(--trackr-light-blue);
-  padding: 20px;
-  border-radius: 4px;
-  margin-bottom: 30px;
+  background: linear-gradient(to right, rgba(67, 160, 71, 0.08), rgba(67, 160, 71, 0.03));
+  border: none;
+  padding: 30px;
+  border-radius: 12px;
+  margin-bottom: 40px;
   position: relative;
+  box-shadow: 0 4px 15px rgba(67, 160, 71, 0.1);
+  overflow: hidden;
 }
 
+/* Refined green accent line */
+.primary-recommendation:before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 5px;
+  background: #43A047; /* A nicer shade of green */
+  border-radius: 6px 0 0 6px;
+}
+
+/* Primary recommendation badge */
 .recommendation-badge {
-  background: linear-gradient(to right, var(--trackr-blue), var(--trackr-light-blue));
+  background: #43A047; /* Matching green for badge */
   color: white;
   display: inline-block;
-  padding: 8px 15px;
-  border-radius: 20px;
-  font-size: 14px;
+  padding: 8px 16px;
+  border-radius: 30px;
+  font-size: 15px;
+  margin-bottom: 20px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 5px rgba(67, 160, 71, 0.2);
+}
+
+/* Primary recommendation heading */
+.primary-recommendation h3 {
+  margin-top: 5px;
+  color: #2E7D32; /* Slightly darker green for heading */
+  font-size: 26px;
+  font-family: var(--font-heading);
   margin-bottom: 15px;
 }
 
-.primary-recommendation h3 {
-  margin-top: 15px;
-  color: #2c3e50;
-  font-size: 20px;
+/* Overview box within primary recommendation */
+.recommendation-overview {
+  background-color: rgba(255, 255, 255, 0.7);
+  padding: 25px;
+  border-radius: 10px;
+  margin: 20px 0 25px 0;
+  border: 1px solid rgba(67, 160, 71, 0.2);
 }
 
-.recommendation-details {
-  color: #444;
-  margin-top: 10px;
-  line-height: 1.5;
+/* Personalized recommendation within primary section */
+.primary-recommendation .recommendation-personalized {
+  background-color: white;
+  border-left: 4px solid #43A047;
+  padding: 20px 25px;
+  margin: 25px 0;
+  border-radius: 0 10px 10px 0;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
 }
 
+.primary-recommendation .recommendation-personalized h4 {
+  color: #2E7D32;
+}
+
+/* Secondary recommendations */
 .secondary-recommendations {
-  margin-top: 30px;
+  margin-top: 50px;
 }
 
 .secondary-recommendations h3 {
-  font-size: 18px;
-  color: #2c3e50;
-  margin-bottom: 15px;
+  font-size: 22px;
+  color: var(--trackr-blue);
+  margin-bottom: 25px;
+  font-family: var(--font-heading);
+  position: relative;
+  padding-bottom: 12px;
+}
+
+.secondary-recommendations h3:after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 60px;
+  height: 3px;
+  background: var(--trackr-light-blue);
 }
 
 .recommendation-card {
   background-color: #f8f9fa;
-  border-radius: 6px;
-  padding: 18px;
-  margin-bottom: 15px;
-  border-left: 3px solid #007bff;
+  border-radius: 10px;
+  padding: 25px;
+  margin-bottom: 20px;
+  border-left: 4px solid var(--trackr-light-blue);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.recommendation-card h4 {
-  color: #2c3e50;
-  margin-top: 0;
-  margin-bottom: 8px;
-  font-size: 18px;
+.recommendation-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
 }
 
-.recommendation-card p {
-  color: #555;
-  margin-bottom: 0;
-  line-height: 1.5;
-}
-
+/* Action buttons */
 .recommendation-actions {
-  margin-top: 40px;
+  margin-top: 50px;
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   gap: 20px;
 }
 
 .action-button {
-  padding: 12px 24px;
-  border-radius: 8px;
+  padding: 14px 28px;
+  border-radius: 30px; /* More rounded buttons */
   cursor: pointer;
-  font-weight: 500;
+  font-weight: 600;
   transition: all 0.3s;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  letter-spacing: 0.5px;
 }
 
 .action-button.primary {
-  background: linear-gradient(to right, var(--trackr-blue), var(--trackr-light-blue));
+  background: linear-gradient(45deg, var(--trackr-blue), var(--trackr-light-blue));
   color: white;
   border: none;
-  padding: 12px 24px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+  padding: 15px 30px;
 }
 
 .action-button.primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(9, 1, 73, 0.25);
 }
 
 .action-button.secondary {
-  background-color: transparent;
+  background-color: white;
   color: var(--trackr-blue);
   border: 1px solid var(--trackr-light-blue);
-}
-
-.action-button.secondary:hover {
-  background-color: rgba(0, 123, 255, 0.1);
 }
 
 .action-button.reset {
   background-color: white;
   color: #d63031;
   border: 1px solid #d63031;
+  margin-left: auto;
 }
 
-.recommendation-overview {
-  background-color: #f8f9fa;
-  padding: 15px;
-  border-radius: 6px;
-  margin-bottom: 20px;
-}
-
-.path-description {
-  font-size: 0.95rem;
-  line-height: 1.5;
-  color: #333;
-}
-
-.recommendation-personalized {
-  border-left: 3px solid var(--trackr-blue);
-  padding-left: 15px;
-  margin: 20px 0;
-}
-
-.recommendation-personalized h4 {
-  color: var(--trackr-blue);
-  font-size: 1rem;
-  margin-bottom: 10px;
-}
-
-.required-field {
-  border-left: 4px solid #ff4757;
-  padding-left: 10px;
-}
-
-.radio-container.required {
-  border-left: 4px solid #ff4757;
-  padding-left: 10px;
-}
-
-/* Error styling updates */
+/* Error styling */
 .error-container {
   background-color: #ffeeee;
   border-left: 4px solid #d63031;
@@ -353,52 +416,7 @@ select:focus,
 .error-message {
   color: #d63031;
   font-family: var(--font-body);
-}
-
-/* Year selection spacing */
-div[class*="year_selection"] .form-group {
-  margin-bottom: 25px;
-}
-
-/* Better checkbox styling */
-.checkbox-container {
-  margin-top: 25px;
-  padding: 12px 15px;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  border: 1px solid var(--trackr-light-grey);
-}
-
-.checkbox-container label {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-}
-
-/* Radio button container styling */
-.radio-container {
-  display: flex;
-  gap: 30px;
-  margin-top: 10px;
-  margin-bottom: 25px;
-}
-
-.radio-container label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-}
-
-/* Question styling */
-form h3 {
-  font-family: var(--font-heading);
-  font-size: 22px;
-  color: var(--trackr-blue);
-  margin-bottom: 25px;
-  padding-bottom: 15px;
-  border-bottom: 1px solid var(--trackr-light-grey);
+  margin: 0;
 }
 
 /* Radio and checkbox input styling */
@@ -417,6 +435,7 @@ input[type="checkbox"] {
   padding-left: 2px;
 }
 
+/* Responsive adjustments */
 @media (max-width: 600px) {
   .recommendation-actions {
     flex-direction: column;
@@ -424,5 +443,10 @@ input[type="checkbox"] {
   
   .action-button {
     width: 100%;
+  }
+  
+  .radio-container {
+    flex-direction: column;
+    gap: 15px;
   }
 }
