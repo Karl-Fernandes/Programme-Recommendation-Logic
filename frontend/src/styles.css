@@ -1,1 +1,34 @@
 /* You can add global styles to this file, and also import other style files */
+@import './styles/theme.css';
+
+/* Apply global styles */
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #fafafa;
+}
+
+/* Button styling */
+button {
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.primary-button {
+  background: linear-gradient(to right, var(--trackr-blue), var(--trackr-light-blue));
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.secondary-button {
+  background-color: white;
+  color: var(--trackr-blue);
+  border: 1px solid var(--trackr-light-blue);
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 500;
+}

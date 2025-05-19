@@ -1,116 +1,147 @@
 /* survey-form.component.css */
 .survey-container {
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 20px;
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 35px;
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 }
 
 .step-indicator {
+  font-family: var(--font-heading);
+  color: var(--trackr-light-blue);
+  font-size: 16px;
   margin-bottom: 20px;
-  color: #555;
-}
-
-select {
-  width: 100%;
   padding: 10px;
-  margin-bottom: 20px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  background-color: var(--trackr-sky-blue);
+  border-radius: 6px;
+  display: inline-block;
 }
 
-.form-navigation {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 20px;
-}
-
-button {
-  padding: 10px 20px;
-  background: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-button:hover {
-  background: #0069d9;
-}
-
+/* Intro screen */
 .intro-screen {
   text-align: center;
   padding: 40px 20px;
 }
 
 .intro-screen h2 {
+  font-family: var(--font-heading);
+  font-size: 32px;
+  color: var(--trackr-blue);
   margin-bottom: 20px;
-  color: #333;
-  font-size: 28px;
 }
 
 .intro-screen p {
-  margin-bottom: 30px;
-  color: #555;
+  font-family: var(--font-body);
   font-size: 18px;
-  line-height: 1.5;
+  color: var(--trackr-dark-blue);
+  margin-bottom: 30px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .get-started-btn {
-  padding: 12px 30px;
-  font-size: 18px;
-  background: #007bff;
+  background: linear-gradient(to right, var(--trackr-blue), var(--trackr-light-blue));
   color: white;
+  font-family: var(--font-body);
+  padding: 12px 30px;
+  border-radius: 8px;
+  font-size: 18px;
   border: none;
-  border-radius: 4px;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .get-started-btn:hover {
-  background: #0056b3;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(9, 1, 73, 0.2);
 }
 
-.form-group {
+/* Form elements */
+select, 
+.form-control {
+  width: 100%;
+  padding: 12px 15px;
+  border: 1px solid var(--trackr-light-grey);
+  border-radius: 8px;
+  font-family: var(--font-body);
+  font-size: 16px;
   margin-bottom: 20px;
+  appearance: auto;
+  background-color: white;
+  color: var(--trackr-navy-blue);
+  transition: border-color 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-label {
+select:focus, 
+.form-control:focus {
+  border-color: var(--trackr-light-blue);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 138, 160, 0.15);
+}
+
+/* Form groups for better spacing */
+.form-group {
+  margin-bottom: 25px;
+}
+
+.form-group label {
   display: block;
   margin-bottom: 8px;
   font-weight: 500;
+  color: var(--trackr-navy-blue);
 }
 
-.checkbox-container {
-  margin-top: 25px;
-}
-
-.checkbox-container label {
+/* Navigation buttons */
+.form-navigation {
   display: flex;
-  align-items: center;
-  font-weight: normal;
+  justify-content: space-between;
+  margin-top: 30px;
 }
 
-.checkbox-container input {
-  margin-right: 10px;
+.form-navigation button {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-family: var(--font-body);
+  font-size: 16px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.next-button {
-  margin-top: 15px;
+.form-navigation button:first-child {
+  background-color: white;
+  border: 1px solid var(--trackr-light-grey);
+  color: var(--trackr-dark-blue);
+}
+
+.form-navigation button:last-child {
+  background: linear-gradient(to right, var(--trackr-blue), var(--trackr-light-blue));
+  color: white;
+}
+
+.form-navigation button:hover {
+  transform: translateY(-2px);
 }
 
 /* Final step styling */
 .final-step {
   text-align: center;
-  padding: 30px;
+  padding: 35px;
   background-color: #f8f9fa;
   border-radius: 8px;
-  margin-bottom: 20px;
+  margin-bottom: 30px;
+  border: 1px solid var(--trackr-light-grey);
 }
 
 .completion-heading {
-  color: #2c3e50;
-  margin-bottom: 15px;
-  font-size: 24px;
+  font-family: var(--font-heading);
+  color: var(--trackr-blue);
+  margin-bottom: 20px;
+  font-size: 26px;
 }
 
 .completion-text {
@@ -119,35 +150,33 @@ label {
   font-size: 16px;
 }
 
+/* Submit button updated to match brand colors */
 .submit-button {
-  background-color: #4CAF50;
+  background: linear-gradient(to right, var(--trackr-blue), var(--trackr-light-blue));
   color: white;
   border: none;
   padding: 12px 28px;
-  border-radius: 4px;
+  border-radius: 8px;
   font-size: 16px;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: all 0.3s;
+  font-weight: 500;
+  box-shadow: 0 2px 5px rgba(9, 1, 73, 0.2);
 }
 
 .submit-button:hover {
-  background-color: #388E3C;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(9, 1, 73, 0.3);
 }
 
-/* Results container styling */
+/* Results section */
 .result-container {
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  margin-top: 40px;
   padding: 25px;
-  margin-top: 30px;
-  border-top: 5px solid #4CAF50;  /* Add a distinctive colored border */
-  animation: fadeIn 0.5s ease-in;  /* Add animation for visibility */
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  border-radius: 12px;
+  background-color: white;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  border-top: 5px solid var(--trackr-light-blue);
 }
 
 .results-header {
@@ -169,8 +198,8 @@ label {
 }
 
 .primary-recommendation {
-  background-color: #e8f5e9;
-  border-left: 4px solid #4CAF50;
+  background-color: rgba(0, 138, 160, 0.1); /* Light version of trackr-light-blue */
+  border-left: 4px solid var(--trackr-light-blue);
   padding: 20px;
   border-radius: 4px;
   margin-bottom: 30px;
@@ -178,16 +207,13 @@ label {
 }
 
 .recommendation-badge {
-  position: absolute;
-  top: -10px;
-  left: 20px;
-  background-color: #4CAF50;
+  background: linear-gradient(to right, var(--trackr-blue), var(--trackr-light-blue));
   color: white;
-  padding: 5px 12px;
-  font-size: 12px;
-  border-radius: 15px;
-  text-transform: uppercase;
-  font-weight: bold;
+  display: inline-block;
+  padding: 8px 15px;
+  border-radius: 20px;
+  font-size: 14px;
+  margin-bottom: 15px;
 }
 
 .primary-recommendation h3 {
@@ -234,38 +260,50 @@ label {
 }
 
 .recommendation-actions {
-  margin-top: 30px;
+  margin-top: 40px;
   display: flex;
   justify-content: center;
-  gap: 15px;
+  gap: 20px;
 }
 
 .action-button {
-  padding: 10px 20px;
-  border-radius: 4px;
+  padding: 12px 24px;
+  border-radius: 8px;
   cursor: pointer;
   font-weight: 500;
   transition: all 0.3s;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .action-button.primary {
-  background-color: #007bff;
+  background: linear-gradient(to right, var(--trackr-blue), var(--trackr-light-blue));
   color: white;
   border: none;
+  padding: 12px 24px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
 }
 
 .action-button.primary:hover {
-  background-color: #0056b3;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .action-button.secondary {
   background-color: transparent;
-  color: #007bff;
-  border: 1px solid #007bff;
+  color: var(--trackr-blue);
+  border: 1px solid var(--trackr-light-blue);
 }
 
 .action-button.secondary:hover {
   background-color: rgba(0, 123, 255, 0.1);
+}
+
+.action-button.reset {
+  background-color: white;
+  color: #d63031;
+  border: 1px solid #d63031;
 }
 
 .recommendation-overview {
@@ -282,13 +320,13 @@ label {
 }
 
 .recommendation-personalized {
-  border-left: 3px solid #5468ff;
+  border-left: 3px solid var(--trackr-blue);
   padding-left: 15px;
   margin: 20px 0;
 }
 
 .recommendation-personalized h4 {
-  color: #5468ff;
+  color: var(--trackr-blue);
   font-size: 1rem;
   margin-bottom: 10px;
 }
@@ -306,15 +344,77 @@ label {
 /* Error styling updates */
 .error-container {
   background-color: #ffeeee;
-  border-left: 4px solid #ff4757;
-  padding: 10px 15px;
+  border-left: 4px solid #d63031;
+  padding: 15px;
   margin-bottom: 20px;
-  border-radius: 4px;
+  border-radius: 6px;
 }
 
 .error-message {
   color: #d63031;
-  margin: 0;
+  font-family: var(--font-body);
+}
+
+/* Year selection spacing */
+div[class*="year_selection"] .form-group {
+  margin-bottom: 25px;
+}
+
+/* Better checkbox styling */
+.checkbox-container {
+  margin-top: 25px;
+  padding: 12px 15px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid var(--trackr-light-grey);
+}
+
+.checkbox-container label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+/* Radio button container styling */
+.radio-container {
+  display: flex;
+  gap: 30px;
+  margin-top: 10px;
+  margin-bottom: 25px;
+}
+
+.radio-container label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+/* Question styling */
+form h3 {
+  font-family: var(--font-heading);
+  font-size: 22px;
+  color: var(--trackr-blue);
+  margin-bottom: 25px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid var(--trackr-light-grey);
+}
+
+/* Radio and checkbox input styling */
+input[type="radio"],
+input[type="checkbox"] {
+  accent-color: var(--trackr-light-blue);
+  width: 18px;
+  height: 18px;
+}
+
+/* Form validation hint style */
+.validation-hint {
+  color: #d63031;
+  font-size: 0.85rem;
+  margin-top: 5px;
+  padding-left: 2px;
 }
 
 @media (max-width: 600px) {

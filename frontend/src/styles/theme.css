@@ -1,0 +1,56 @@
+/* Global color variables */
+:root {
+  /* Main brand colors from menu header */
+  --trackr-blue: #090149;
+  --trackr-light-blue: #008AA0;
+  
+  /* Secondary colors */
+  --trackr-navy-blue: #1c244b;
+  --trackr-dark-blue: #3d4459;
+  --trackr-light-grey: #c8d5dc;
+  --trackr-sky-blue: #e7ecfe;
+  
+  /* Font families */
+  --font-heading: 'Varela Round', sans-serif;
+  --font-body: 'Montserrat', sans-serif;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  color: var(--trackr-blue);
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--trackr-dark-blue);
+}
+
+/* Import fonts with corrected paths */
+@font-face {
+  font-family: 'Montserrat';
+  src: url('/assets/fonts/Montserrat-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Montserrat';
+  src: url('/assets/fonts/Montserrat-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Montserrat';
+  src: url('/assets/fonts/Montserrat-Bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Varela Round';
+  src: url('/assets/fonts/VarelaRound-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
