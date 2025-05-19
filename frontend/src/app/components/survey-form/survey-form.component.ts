@@ -101,6 +101,24 @@ export class SurveyFormComponent {
   }
   
   nextStep() {
+    // Validate before proceeding
+    if (!this.isValueValid()) {
+      // Set appropriate error message based on question type
+      if (this.questionType === 'select') {
+        this.error = 'Please select an option to continue';
+      } else if (this.questionType === 'boolean') {
+        this.error = 'Please select Yes or No to continue';
+      } else if (this.questionType === 'year_selection') {
+        this.error = 'Please select both start and graduation years';
+      } else {
+        this.error = 'Please complete this question to continue';
+      }
+      return;
+    }
+
+    // Clear any previous errors
+    this.error = '';
+    
     // Save current step before moving to the next one
     this.surveyData.previous_step = this.currentStep;
     
@@ -153,6 +171,20 @@ export class SurveyFormComponent {
       }
     });
   }
+
+  resetSurvey() {
+    // Reset all form data
+    this.surveyData = {};
+    
+    // Clear any results
+    this.eligibilityResult = null;
+    this.error = '';
+
+    // Restart survey
+    this.startSurvey();
+    console.log('Survet reset and restarted');
+
+  }
   
   submitSurvey() {
     this.loading = true;
@@ -196,17 +228,35 @@ export class SurveyFormComponent {
     return this.currentStep === 0;
   }
   
-  isValueValid(value: any): boolean {
+  isValueValid(): boolean {
+    // Always validate based on current step/question type
     if (this.questionType === 'select') {
-      return !!value;
+      return !!this.surveyData.education_stage;
     }
+    
     if (this.questionType === 'boolean') {
-      return value === true || value === false;
+      // Check the appropriate boolean field based on current step
+      if (this.currentStep === 3) {
+        return this.surveyData.has_spring_weeks === true || this.surveyData.has_spring_weeks === false;
+      }
+      if (this.currentStep === 4) {
+        return this.surveyData.converted_spring_to_internship === true || 
+               this.surveyData.converted_spring_to_internship === false;
+      }
+      if (this.currentStep === 'internship_experience') {
+        return this.surveyData.has_experience === true || this.surveyData.has_experience === false;
+      }
+      if (this.currentStep === 'grad_offer') {
+        return this.surveyData.has_grad_offer === true || this.surveyData.has_grad_offer === false;
+      }
+      return false; // If we can't determine which boolean field to check
     }
+    
     if (this.questionType === 'year_selection') {
       return !!this.surveyData.start_year && !!this.surveyData.graduation_year;
     }
-    return true;
+    
+    return true; // Default case
   }
   
   updateFormValue(field: string, value: any) {

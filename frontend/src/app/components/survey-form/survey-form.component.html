@@ -11,7 +11,7 @@
     <!-- Simpler alternative -->
     <div *ngIf="!loading && !error && currentStep !== 'final'" class="step-indicator">
       <span *ngIf="isNumberStep()">Question {{currentStep}}</span>
-      <span *ngIf="isStringStep() && currentStep !== 'final'">{{currentQuestion}}</span>
+      <span *ngIf="isStringStep() && currentStep !== 'final'">Follow-up Question</span>
     </div>
 
     <!-- Loading State -->
@@ -19,14 +19,13 @@
       <p>Loading...</p>
     </div>
 
-    <!-- Error State -->
+    <!-- Error State - Show above the form but don't hide the form -->
     <div *ngIf="error" class="error-container">
       <p class="error-message">{{error}}</p>
-      <button (click)="retry()" class="retry-button">Try Again</button>
     </div>
 
-    <!-- Dynamic Question Form -->
-    <form *ngIf="!loading && !error && currentQuestion && currentStep !== 'final'" 
+    <!-- Dynamic Question Form - Remove !error from the condition -->
+    <form *ngIf="!loading && currentQuestion && currentStep !== 'final'" 
           (submit)="$event.preventDefault(); nextStep()">
       
       <h3>{{currentQuestion}}</h3>
@@ -119,7 +118,7 @@
       <!-- Navigation Buttons -->
       <div class="form-navigation">
         <button type="button" *ngIf="currentStep !== 1" (click)="prevStep()">Previous</button>
-        <button type="button" (click)="nextStep()">Next</button>
+        <button type="button" [disabled]="!isValueValid()" (click)="nextStep()">Next</button>
       </div>
     </form>
 
@@ -127,7 +126,10 @@
     <div *ngIf="currentStep === 'final'" class="final-step">
       <h2 class="completion-heading">Thank you for providing your information!</h2>
       <p class="completion-text">Click submit to see your personalized career recommendations.</p>
-      <button type="button" (click)="submitSurvey()" class="submit-button">Submit</button>
+      <button type="button" class="submit-button">
+        <Span *ngIf="!eligibilityResult" (click)="submitSurvey()">Submit</Span>
+        <Span *ngIf="eligibilityResult" (click)="resetSurvey()">Start Over</Span>
+      </button>
     </div>
 
     <!-- Results Display with Improved Styling -->
