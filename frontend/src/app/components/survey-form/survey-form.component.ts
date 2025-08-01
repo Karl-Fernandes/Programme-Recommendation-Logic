@@ -4,7 +4,7 @@ type CareerPathKey = 'Summer Internships' | 'Spring Weeks' | 'Off-Cycle Internsh
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { SurveyService } from '../../services/survey.service';
+import { SurveyProcessorService } from '../../services/survey-processor.service';
 import { EligibilityResult } from '../../models/eligibilty-result.model';
 
 @Component({
@@ -15,7 +15,7 @@ import { EligibilityResult } from '../../models/eligibilty-result.model';
   styleUrls: ['./survey-form.component.css'],
 })
 export class SurveyFormComponent {
-  // Survey data to send to backend
+  // Survey data for local processing
   surveyData: any = {};
   
   // UI state
@@ -37,7 +37,7 @@ export class SurveyFormComponent {
   // Results
   eligibilityResult: EligibilityResult | null = null;
   
-  constructor(private surveyService: SurveyService) {
+  constructor(private surveyProcessor: SurveyProcessorService) {
     this.generateYearArrays();
   }
   
@@ -56,54 +56,50 @@ export class SurveyFormComponent {
     this.loading = true;
     this.error = '';
     
-    // Prepare data to send to backend
+    // Use local processor instead of API call
     const requestData = {
       current_step: this.currentStep,
       ...this.surveyData
     };
     
-    console.log('Requesting next question with data:', requestData);
+    console.log('Processing next question with data:', requestData);
     
-    this.surveyService.getNextStep(requestData).subscribe({
-      next: (response) => {
-        console.log('Received response:', response);
-        this.loading = false;
-        
-        if (response.error) {
-          this.error = response.error;
-          return;
-        }
-        
-        this.currentStep = response.next_step;
-        
-        if (response.next_step === 'final') {
-          this.finalMessage = response.message || 'Thank you for completing the survey!';
-          return;
-        }
-        
-        this.currentQuestion = response.question;
-        this.questionType = response.type;
-        
-        if (response.type === 'select') {
-          this.options = response.options || [];
-          this.surveyData.education_stage = '';
-
-        }
-        
-        if (response.type === 'year_selection') {
-          this.hasPlacementOption = response.has_placement === true;
-            this.surveyData.start_year = '';
-            this.surveyData.graduation_year = '';
-
-
-        }
-      },
-      error: (err) => {
-        this.loading = false;
-        this.error = 'Error loading question: ' + (err.message || 'Unknown error');
-        console.error('API error:', err);
+    try {
+      const response = this.surveyProcessor.getNextStep(requestData);
+      console.log('Received response:', response);
+      
+      this.loading = false;
+      
+      if (response.error) {
+        this.error = response.error;
+        return;
       }
-    });
+      
+      this.currentStep = response.next_step;
+      
+      if (response.next_step === 'final') {
+        this.finalMessage = response.message || 'Thank you for completing the survey!';
+        return;
+      }
+      
+      this.currentQuestion = response.question || '';
+      this.questionType = response.type || '';
+      
+      if (response.type === 'select') {
+        this.options = response.options || [];
+        this.surveyData.education_stage = '';
+      }
+      
+      if (response.type === 'year_selection') {
+        this.hasPlacementOption = response.has_placement === true;
+        this.surveyData.start_year = '';
+        this.surveyData.graduation_year = '';
+      }
+    } catch (err) {
+      this.loading = false;
+      this.error = 'Error processing question: ' + (err || 'Unknown error');
+      console.error('Processing error:', err);
+    }
   }
   
   nextStep() {
@@ -135,7 +131,6 @@ export class SurveyFormComponent {
   prevStep() {
     console.log('Moving back from step', this.currentStep);
     
-    // For simplicity, we'll let the backend decide where to go
     this.loading = true;
     this.error = '';
     
@@ -145,37 +140,35 @@ export class SurveyFormComponent {
       ...this.surveyData
     };
     
-    console.log('Requesting previous step with data:', requestData);
+    console.log('Processing previous step with data:', requestData);
     
-    this.surveyService.getNextStep(requestData).subscribe({
-      next: (response) => {
-        console.log('Received previous step response:', response);
-        this.loading = false;
-        
-        if (response.error) {
-          this.error = response.error;
-          return;
-        }
-        
-        // Update current step to the previous step
-        this.currentStep = response.next_step;
-        this.currentQuestion = response.question;
-        this.questionType = response.type;
-        
-        if (response.type === 'select') {
-          this.options = response.options || [];
-        }
-        
-        if (response.type === 'year_selection') {
-          this.hasPlacementOption = response.has_placement === true;
-        }
-      },
-      error: (err) => {
-        this.loading = false;
-        this.error = 'Error loading previous question: ' + (err.message || 'Unknown error');
-        console.error('API error:', err);
+    try {
+      const response = this.surveyProcessor.getNextStep(requestData);
+      console.log('Received previous step response:', response);
+      
+      this.loading = false;
+      
+      if (response.error) {
+        this.error = response.error;
+        return;
       }
-    });
+      
+      this.currentStep = response.next_step;
+      this.currentQuestion = response.question || '';
+      this.questionType = response.type || '';
+      
+      if (response.type === 'select') {
+        this.options = response.options || [];
+      }
+      
+      if (response.type === 'year_selection') {
+        this.hasPlacementOption = response.has_placement === true;
+      }
+    } catch (err) {
+      this.loading = false;
+      this.error = 'Error processing previous question: ' + (err || 'Unknown error');
+      console.error('Processing error:', err);
+    }
   }
 
   resetSurvey() {
@@ -199,34 +192,37 @@ export class SurveyFormComponent {
     // Set graduated flag based on education_stage
     this.surveyData.graduated = this.surveyData.education_stage === 'graduate';
     
-    console.log('Submitting survey data:', this.surveyData);
+    console.log('Processing survey data locally:', this.surveyData);
     
-    this.surveyService.submitSurvey(this.surveyData).subscribe({
-      next: (result) => {
-        console.log('Survey result:', result);
-        this.loading = false;
-        this.eligibilityResult = result;
-        
-        // If result is empty or missing expected fields
-        if (!result || !result.primary_tab) {
-          this.error = 'No recommendations received. The server may have encountered an error processing your data.';
-        } else {
-          // Add this code to scroll to results
-          setTimeout(() => {
-            const resultElement = document.querySelector('.result-container');
-            if (resultElement) {
-              resultElement.scrollIntoView({ behavior: 'smooth' });
-            }
-          }, 100);
-        }
-      },
-      error: (err) => {
-        this.loading = false;
-        this.error = 'Error submitting survey: ' + (err.message || 'Unknown error');
-        console.error('API error:', err);
-        console.error('Error details:', err.error);
+    try {
+      // Calculate year of study if needed
+      if (this.surveyData.education_stage === 'university') {
+        this.surveyData.year_of_study = this.surveyProcessor.calculateYearOfStudy(this.surveyData);
       }
-    });
+
+      
+      // Process eligibility locally
+      const result = this.surveyProcessor.processEligibility(this.surveyData);
+      
+      console.log('Survey result:', result);
+      this.loading = false;
+      this.eligibilityResult = result;
+      
+      if (!result || !result.primary_tab) {
+        this.error = 'No recommendations could be generated based on your responses.';
+      } else {
+        setTimeout(() => {
+          const resultElement = document.querySelector('.result-container');
+          if (resultElement) {
+            resultElement.scrollIntoView({ behavior: 'smooth' });
+          }
+        }, 100);
+      }
+    } catch (err) {
+      this.loading = false;
+      this.error = 'Error processing survey: ' + (err || 'Unknown error');
+      console.error('Processing error:', err);
+    }
   }
   
   // Helper methods for templates
@@ -268,10 +264,6 @@ export class SurveyFormComponent {
   updateFormValue(field: string, value: any) {
     this.surveyData[field] = value;
     console.log(`Updated ${field} to ${value}`);
-  }
-  
-  retry() {
-    this.getNextQuestion();
   }
   
   isStringStep(): boolean {

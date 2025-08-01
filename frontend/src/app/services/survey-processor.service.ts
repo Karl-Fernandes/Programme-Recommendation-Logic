@@ -1,0 +1,522 @@
+import { Injectable } from '@angular/core';
+import { EDUCATION_STAGES, STEP_TYPES, EducationStage, StepType, COMMENTARY_TEXTS } from '../models/survey-constants';
+import { EligibilityResult } from '../models/eligibilty-result.model';
+
+export interface SurveyStepResponse {
+  next_step: StepType;
+  question?: string;
+  type?: string;
+  options?: string[];
+  has_placement?: boolean;
+  message?: string;
+  error?: string;
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class SurveyProcessorService {
+
+  getNextStep(surveyData: any): SurveyStepResponse {
+    const currentStep = surveyData.current_step;
+    const isPrevious = surveyData.is_previous;
+
+    try {
+      if (isPrevious) {
+        return this.getPreviousStep(currentStep, surveyData);
+      }
+
+      switch (currentStep) {
+        case STEP_TYPES.WELCOME:
+          return {
+            next_step: STEP_TYPES.EDUCATION_STAGE,
+            question: "What is your current education stage?",
+            type: "select",
+            options: [
+              EDUCATION_STAGES.HIGH_SCHOOL,
+              EDUCATION_STAGES.UNIVERSITY,
+              EDUCATION_STAGES.GRADUATE
+            ]
+          };
+
+        case STEP_TYPES.EDUCATION_STAGE:
+          return this.handleEducationStageStep(surveyData);
+
+        case STEP_TYPES.UNIVERSITY_TIMELINE:
+          return this.handleUniversityTimelineStep(surveyData);
+
+        case STEP_TYPES.SPRING_WEEKS:
+            return this.handleSpringWeeks(surveyData);
+
+        case STEP_TYPES.SPRING_CONVERSION:
+          return this.handleSpringConversionStep(surveyData);
+
+        case STEP_TYPES.INTERNSHIP_EXPERIENCE:
+          return this.handleInternshipExperience(surveyData);
+
+        case STEP_TYPES.GRAD_OFFER:
+          return this.handleGradOffer(surveyData); 
+
+        default:
+          return {
+            next_step: STEP_TYPES.FINAL,
+            message: "Thank you for completing the survey!"
+          };
+      }
+    } catch (error) {
+      return {
+        next_step: currentStep,
+        error: `Error processing step: ${error}`
+      };
+    }
+  }
+
+  private handleEducationStageStep(surveyData: any): SurveyStepResponse {
+    const educationStage = surveyData.education_stage;
+
+    if (educationStage === EDUCATION_STAGES.HIGH_SCHOOL) {
+      return {
+        next_step: STEP_TYPES.FINAL,
+        message: "High school students should check the Pre-University tab for available opportunities."
+      };
+    }
+
+    if (educationStage === EDUCATION_STAGES.GRADUATE) {
+      // Graduates are equivalent to final year+ students, so they can be asked about internship experience
+      // They will also be asked about graduate offers since they're already graduated
+      return {
+        next_step: STEP_TYPES.INTERNSHIP_EXPERIENCE,
+        question: "Do you have any internship experience?",
+        type: "boolean"
+      };
+    }
+
+    // University students
+    return {
+      next_step: STEP_TYPES.UNIVERSITY_TIMELINE,
+      question: "Please select your university start year and expected graduation year:",
+      type: "year_selection",
+      has_placement: true
+    };
+  }
+
+  private handleUniversityTimelineStep(surveyData: any): SurveyStepResponse {
+    const yearOfStudy = this.calculateYearOfStudy(surveyData);
+    const graduationYear = parseInt(surveyData.graduation_year);
+    const currentYear = new Date().getFullYear();
+    const yearsUntilGrad = graduationYear - currentYear;
+    
+    // If year 1 or more than 2 years until graduation, end survey early
+    if (yearOfStudy < 2 || yearsUntilGrad <= 0) {
+      return {
+        next_step: STEP_TYPES.FINAL,
+        message: "Thank you for completing the survey!"
+      };
+    }
+
+    return {
+      next_step: STEP_TYPES.SPRING_WEEKS,
+      question: "Have you attended any spring weeks?",
+      type: "boolean"
+    };
+  }
+
+  private handleSpringWeeks(surveyData: any): SurveyStepResponse {
+    const hasSpringWeeks = surveyData.has_spring_weeks;
+    const yearOfStudy = this.calculateYearOfStudy(surveyData);
+
+    if (!hasSpringWeeks) {
+      // Only ask about internship experience if they're year 2 or later
+      if (yearOfStudy >= 2) {
+        return {
+          next_step: STEP_TYPES.INTERNSHIP_EXPERIENCE,
+          question: "Do you have any internship experience?",
+          type: "boolean"
+        };
+      } else {
+        // Year 1 students with no spring weeks go straight to final
+        return {
+          next_step: STEP_TYPES.FINAL,
+          message: "Thank you for completing the survey!"
+        };
+      }
+    }
+
+    return {
+      next_step: STEP_TYPES.SPRING_CONVERSION,
+      question: "Did you convert your spring week to a summer internship?",
+      type: "boolean"
+    };
+  }
+
+  private handleSpringConversionStep(surveyData: any): SurveyStepResponse {
+    const convertedSpringToInternship = surveyData.converted_spring_to_internship;
+    const graduationYear = parseInt(surveyData.graduation_year);
+    const currentYear = new Date().getFullYear();
+    const yearsUntilGrad = graduationYear - currentYear;
+    const yearOfStudy = this.calculateYearOfStudy(surveyData);
+    
+    // If they converted spring week to internship, set has_experience to true
+    if (convertedSpringToInternship) {
+      surveyData.has_experience = true;
+      
+      // Only ask about grad offer if they're in final year (0 years until grad) or year 4+
+      if (yearsUntilGrad === 0 || yearOfStudy >= 4) {
+        return {
+          next_step: STEP_TYPES.GRAD_OFFER,
+          question: "Do you have a graduate offer?",
+          type: "boolean"
+        };
+      } else {
+        // If not final year, skip to final step
+        return {
+          next_step: STEP_TYPES.FINAL,
+          message: "Thank you for completing the survey!"
+        };
+      }
+    }
+    
+    // If they didn't convert, ask about other internship experience (they're year 2+ and had spring weeks)
+    return {
+      next_step: STEP_TYPES.INTERNSHIP_EXPERIENCE,
+      question: " Have you completed any prior relevant Summer Internships or Full-Time work?",
+      type: "boolean"
+    };
+  }
+
+  private handleInternshipExperience(surveyData: any): SurveyStepResponse {
+    const internshipExperience = surveyData.has_experience;
+    const educationStage = surveyData.education_stage;
+
+    if (internshipExperience) {
+        surveyData.has_experience = true;
+    }
+
+    // Graduates should always be asked about graduate offers
+    if (educationStage === EDUCATION_STAGES.GRADUATE) {
+      return {
+          next_step: STEP_TYPES.GRAD_OFFER,
+          question: "Do you have a graduate offer?",
+          type: "boolean"
+      };
+    }
+
+    // For university students, check if they're in final year or year 4+
+    const yearOfStudy = this.calculateYearOfStudy(surveyData);
+    const graduationYear = parseInt(surveyData.graduation_year);
+    const currentYear = new Date().getFullYear();
+    const yearsUntilGrad = graduationYear - currentYear;
+
+    // Ask about grad offer if final year (0 years until grad) or already year 4+
+    if (yearsUntilGrad === 0 || yearOfStudy >= 4) {
+      return {
+          next_step: STEP_TYPES.GRAD_OFFER,
+          question: "Do you have a graduate offer?",
+          type: "boolean"
+      };
+    } else {
+      // If not final year, skip to final step
+      return {
+          next_step: STEP_TYPES.FINAL,
+          message: "Thank you for completing the survey!"
+      };
+    }
+  }
+
+  private handleGradOffer(surveyData: any): SurveyStepResponse {
+    const gradOffer = surveyData.has_grad_offer;
+
+    if (gradOffer) {
+        surveyData.has_grad_offer = true;
+    }
+    
+    return {
+        next_step: STEP_TYPES.FINAL,
+        message: "Thank you for completing the survey!"
+    };
+  }
+
+  private getPreviousStep(currentStep: StepType, surveyData: any): SurveyStepResponse {
+    switch (currentStep) {
+      case STEP_TYPES.EDUCATION_STAGE:
+        return {
+          next_step: STEP_TYPES.WELCOME,
+          message: "Welcome to the Programme Eligibility Survey"
+        };
+
+      case STEP_TYPES.UNIVERSITY_TIMELINE:
+        return {
+          next_step: STEP_TYPES.EDUCATION_STAGE,
+          question: "What is your current education stage?",
+          type: "select",
+          options: [
+            EDUCATION_STAGES.HIGH_SCHOOL,
+            EDUCATION_STAGES.UNIVERSITY,
+            EDUCATION_STAGES.GRADUATE
+          ]
+        };
+        
+      case STEP_TYPES.SPRING_WEEKS:
+        return {
+          next_step: STEP_TYPES.UNIVERSITY_TIMELINE,
+          question: "Please select your university start year and expected graduation year:",
+          type: "year_selection",
+          has_placement: true
+        };
+
+      case STEP_TYPES.SPRING_CONVERSION:
+          return {
+            next_step: STEP_TYPES.SPRING_WEEKS,
+            question: "Have you attended any spring weeks?",
+            type: "boolean"
+          };
+     
+      case STEP_TYPES.INTERNSHIP_EXPERIENCE:
+        // Check if they came from spring conversion (they had spring weeks but didn't convert)
+        if (surveyData.has_spring_weeks === true && surveyData.converted_spring_to_internship === false) {
+          return {
+            next_step: STEP_TYPES.SPRING_CONVERSION,
+            question: "Did you convert your spring week to a summer internship?",
+            type: "boolean"
+          };
+        }
+        
+        // If they came directly from spring weeks (no spring weeks), go back to spring weeks
+        return {
+          next_step: STEP_TYPES.SPRING_WEEKS,
+          question: "Have you attended any spring weeks?",
+          type: "boolean"
+        };
+
+      case STEP_TYPES.GRAD_OFFER:
+        // Check if they came from spring conversion (converted = true, skipped internship question)
+        if (surveyData.has_spring_weeks === true && surveyData.converted_spring_to_internship === true) {
+          return {
+            next_step: STEP_TYPES.SPRING_CONVERSION,
+            question: "Did you convert your spring week to a summer internship?",
+            type: "boolean"
+          };
+        }
+        
+        // Otherwise they came from internship experience question
+        return {
+          next_step: STEP_TYPES.INTERNSHIP_EXPERIENCE,
+          question: "Have you completed any prior relevant Summer Internships or Full-Time work?",
+          type: "boolean"
+        };
+
+
+
+      default:
+        return {
+          next_step: STEP_TYPES.EDUCATION_STAGE,
+          question: "What is your current education stage?",
+          type: "select",
+          options: [
+            EDUCATION_STAGES.HIGH_SCHOOL,
+            EDUCATION_STAGES.UNIVERSITY,
+            EDUCATION_STAGES.GRADUATE
+          ]
+        };
+    }
+  }
+
+  calculateYearOfStudy(surveyData: any): number {
+    const startYear = parseInt(surveyData.start_year);
+    const graduationYear = parseInt(surveyData.graduation_year);
+
+    if (!startYear || !graduationYear) {
+      throw new Error("Start year and graduation year are required");
+    }
+
+    const currentDate = new Date();
+    // Academic year starts in September, so if we're before September, use previous year
+    const academicYear = currentDate.getMonth() < 8 ? currentDate.getFullYear() - 1 : currentDate.getFullYear();
+    
+    const yearOfStudy = academicYear - startYear + 1;
+    const totalDuration = graduationYear - startYear;
+
+    // Handle placement year - similar logic but using academic year calculation
+    if (surveyData.has_placement && totalDuration === 4) {
+      const yearsSinceStart = academicYear - startYear;
+      if (yearsSinceStart === 2) return 3; // Currently on placement (year 3)
+      if (yearsSinceStart === 3) return 4; // Final year after placement
+    }
+
+    // Ensure year of study is within reasonable bounds
+    return Math.min(Math.max(yearOfStudy, 1), totalDuration);
+  }
+
+  processEligibility(surveyData: any): EligibilityResult {
+    const educationStage = surveyData.education_stage;
+    const hasSpringWeeks = surveyData.has_spring_weeks;
+    const hasExperience = surveyData.has_experience;
+    const hasGradOffer = surveyData.has_grad_offer;
+    const hasPlacement = surveyData.has_placement;
+    const graduationYear = parseInt(surveyData.graduation_year);
+    const currentYear = new Date().getFullYear();
+    const yearsUntilGrad = graduationYear ? graduationYear - currentYear : null;
+
+    // Initialize result structure
+    const result: EligibilityResult = {
+      primary_tab: '',
+      secondary_tabs: [],
+      commentary: {},
+    };
+
+    // High school processing
+    if (educationStage === EDUCATION_STAGES.HIGH_SCHOOL) {
+      return this.processHighSchool(result);
+    }
+
+    // Graduate processing
+    if (educationStage === EDUCATION_STAGES.GRADUATE) {
+      return this.processGraduate(result, hasExperience || hasPlacement);
+    }
+
+    // University processing
+    if (educationStage === EDUCATION_STAGES.UNIVERSITY) {
+      const yearOfStudy = this.calculateYearOfStudy(surveyData);
+      return this.processUniversity(result, yearsUntilGrad, yearOfStudy, hasPlacement, hasGradOffer, hasExperience, hasSpringWeeks);
+    }
+
+    // Default case
+    result.primary_tab = 'Pre-University';
+    result.commentary = { [result.primary_tab]: COMMENTARY_TEXTS['Pre-University'] };
+    return result;
+  }
+
+  private processHighSchool(result: EligibilityResult): EligibilityResult {
+    result.primary_tab = 'Pre-University';
+    result.commentary = { [result.primary_tab]: COMMENTARY_TEXTS['Pre-University'] };
+    return result;
+  }
+
+  private processGraduate(result: EligibilityResult, hasRelevantExperience: boolean): EligibilityResult {
+    if (hasRelevantExperience) {
+      result.primary_tab = 'Off-Cycle Internships';
+      result.secondary_tabs = ['Graduate Schemes'];
+      result.commentary = {
+        [result.primary_tab]: COMMENTARY_TEXTS['Graduated Exp'],
+        'Graduate Schemes': COMMENTARY_TEXTS['Graduate Schemes']
+      };
+    } else {
+      result.primary_tab = 'Graduate Schemes';
+      result.secondary_tabs = ['Off-Cycle Internships'];
+      result.commentary = {
+        [result.primary_tab]: COMMENTARY_TEXTS['Graduated No Exp'],
+        'Off-Cycle Internships': COMMENTARY_TEXTS['Off-Cycle Internships Grad No Exp']
+      };
+    }
+    return result;
+  }
+
+  private processUniversity(
+    result: EligibilityResult, 
+    yearsUntilGrad: number | null, 
+    yearOfStudy: number, 
+    hasPlacement: boolean, 
+    hasGradOffer: boolean, 
+    hasExperience: boolean,
+    hasSpringWeeks: boolean
+  ): EligibilityResult {
+    
+    if (yearsUntilGrad === null) {
+      return this.defaultSpringWeeks(result);
+    }
+
+    // More than 2 years until graduation
+    if (yearsUntilGrad > 2) {
+      return this.processEarlyUniversity(result, yearOfStudy, hasPlacement);
+    }
+
+    // Exactly 2 years until graduation, year 2, with placement
+    if (yearsUntilGrad === 2 && yearOfStudy === 2 && hasPlacement) {
+      result.primary_tab = 'Industrial Placements';
+      result.secondary_tabs = ['Off-Cycle Internships'];
+      result.commentary = {
+        [result.primary_tab]: COMMENTARY_TEXTS['Industrial Placements'],
+        'Off-Cycle Internships': COMMENTARY_TEXTS['Off-Cycle Internships']
+      };
+      return result;
+    }
+
+    // Exactly 2 years until graduation (standard case)
+    if (yearsUntilGrad === 2) {
+      return this.defaultSpringWeeks(result);
+    }
+
+    // 1 year until graduation (penultimate year)
+    if (yearsUntilGrad === 1) {
+      result.primary_tab = 'Summer Internships';
+      result.secondary_tabs = ['Spring Weeks'];
+      result.commentary = {
+        [result.primary_tab]: COMMENTARY_TEXTS['Summer Internships'],
+        'Spring Weeks': COMMENTARY_TEXTS['Summer Internships Masters Backup']
+      };
+      return result;
+    }
+
+    // Final year (0 years until graduation)
+    if (yearsUntilGrad === 0) {
+      return this.processFinalYear(result, hasGradOffer, hasExperience || hasPlacement);
+    }
+
+    // Default fallback
+    return this.defaultSpringWeeks(result);
+  }
+
+  private processEarlyUniversity(result: EligibilityResult, yearOfStudy: number, hasPlacement: boolean): EligibilityResult {
+    if (hasPlacement) {
+      result.primary_tab = 'Industrial Placements';
+      result.secondary_tabs = [yearOfStudy === 2 ? 'Off-Cycle Internships' : 'Spring Weeks'];
+      result.commentary = {
+        [result.primary_tab]: yearOfStudy === 1 
+          ? COMMENTARY_TEXTS['Industrial Placements First Year'] 
+          : COMMENTARY_TEXTS['Industrial Placements Later Year'],
+        [result.secondary_tabs[0]]: yearOfStudy === 2 
+          ? COMMENTARY_TEXTS['Off-Cycle Internships'] 
+          : COMMENTARY_TEXTS['Spring Weeks More Than 2']
+      };
+    } else {
+      result.primary_tab = 'Spring Weeks';
+      result.commentary = { [result.primary_tab]: COMMENTARY_TEXTS['Spring Weeks More Than 2'] };
+    }
+    return result;
+  }
+
+  private processFinalYear(result: EligibilityResult, hasGradOffer: boolean, hasRelevantExperience: boolean): EligibilityResult {
+    if (hasGradOffer) {
+      result.primary_tab = 'Graduate Schemes';
+      result.secondary_tabs = ['Summer Internships', 'Off-Cycle Internships'];
+      result.commentary = {
+        [result.primary_tab]: COMMENTARY_TEXTS['Graduate Schemes'],
+        'Summer Internships': COMMENTARY_TEXTS['Summer Internships Masters Final Year'],
+        'Off-Cycle Internships': COMMENTARY_TEXTS['Off-Cycle Internships Final Year']
+      };
+    } else if (hasRelevantExperience) {
+      result.primary_tab = 'Off-Cycle Internships';
+      result.secondary_tabs = ['Summer Internships', 'Graduate Schemes'];
+      result.commentary = {
+        [result.primary_tab]: COMMENTARY_TEXTS['Final Year No Offer Exp'],
+        'Summer Internships': COMMENTARY_TEXTS['Summer Internships Final Year Experience'],
+        'Graduate Schemes': COMMENTARY_TEXTS['Graduate Schemes Final Year Experience']
+      };
+    } else {
+      result.primary_tab = 'Summer Internships';
+      result.secondary_tabs = ['Off-Cycle Internships', 'Graduate Schemes'];
+      result.commentary = {
+        [result.primary_tab]: COMMENTARY_TEXTS['Final Year No Offer No Exp'],
+        'Graduate Schemes': COMMENTARY_TEXTS['Graduate Schemes Final Year No Experience'],
+        'Off-Cycle Internships': COMMENTARY_TEXTS['Off-Cycle Internships Final Year No Experience']
+      };
+    }
+    return result;
+  }
+
+  private defaultSpringWeeks(result: EligibilityResult): EligibilityResult {
+    result.primary_tab = 'Spring Weeks';
+    result.commentary = { [result.primary_tab]: COMMENTARY_TEXTS['Spring Weeks'] };
+    return result;
+  }
+}
