@@ -1,4 +1,4 @@
-type CareerPathKey = 'Summer Internships' | 'Spring Weeks' | 'Off-Cycle Internships' | 
+type CareerPathKey = 'Summer Internships' | 'Spring Weeks' | 'Insight Programmes' | 'Off-Cycle Internships' | 
                      'Industrial Placements' | 'Graduate Schemes' | 'Pre-University';
 
 import { Component } from '@angular/core';
@@ -253,10 +253,10 @@ export class SurveyFormComponent {
     
     if (this.questionType === 'boolean') {
       // Check the appropriate boolean field based on current step
-      if (this.currentStep === 3) {
+      if (this.currentStep === 4) {
         return this.surveyData.has_spring_weeks === true || this.surveyData.has_spring_weeks === false;
       }
-      if (this.currentStep === 4) {
+      if (this.currentStep === 5) {
         return this.surveyData.converted_spring_to_internship === true || 
                this.surveyData.converted_spring_to_internship === false;
       }
@@ -294,6 +294,8 @@ export class SurveyFormComponent {
     "Summer Internships": "Summer internships are 8-10 week paid internship programmes lasting from June to August. These are typically intended for penultimate-year students and normally lead to a graduate offer at the end of the internship, contingent on good performance. Summer internships are the most effective and reliable route to receiving a full-time offer and are treated as a prerequisite for applying to off-cycle internships and graduate programmes. Summer internship programmes receive the most applicants of any tab, but they also have the highest number of available offers.",
     
     "Spring Weeks": "Spring weeks are 1-5 day insight programmes conducted during Spring holidays. These are typically intended for students graduating in 2 years and often lead to a summer internship offer at the end of the spring week, contingent on strong performance or post-spring week interview. Spring weeks are an excellent route into receiving a summer internship offer more than 1 year in advance, and are less dependent on previous relevant experience. Even if you don't convert a spring week, candidates with spring weeks on their resume receive almost twice as many summer internship interviews the following year.",
+    
+    "Insight Programmes": "Insight programmes are 1-5 day immersive experiences conducted during university holidays, designed to give students exposure to different areas of technology. These are typically intended for students graduating in 2 years and often lead to a summer internship offer at the end of the programme, contingent on strong performance. Insight programmes are an excellent route into receiving a summer internship offer more than 1 year in advance, and are less dependent on previous technical experience. Tech companies value curiosity and potential over existing skills, making these programmes ideal for exploring different technology career paths.",
     
     "Off-Cycle Internships": "Off-cycle internships are 3-6 month paid internship programmes running at various times of the year. Due to the long-term nature of these programmes, they are typically intended for recent graduates. However, any student is eligible if you are able to take time off university or complete the internship alongside your studies. Off-cycle internships open far more sporadically as opposed to summer internships which open at the same time every year. These often lead to a graduate offer at the end of the internship, contingent of good performance - however many off-cycle internships are non-convertible.",
     

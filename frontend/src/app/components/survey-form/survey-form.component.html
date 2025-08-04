@@ -81,7 +81,7 @@
 
       <!-- Boolean Type Question -->
       <div *ngIf="questionType === 'boolean'" class="radio-container">
-        <ng-container *ngIf="currentStep === 3">
+        <ng-container *ngIf="currentStep === 4">
           <label>
             <input type="radio" [(ngModel)]="surveyData.has_spring_weeks" name="booleanAnswer" [value]="true">
             Yes
@@ -92,7 +92,7 @@
           </label>
         </ng-container>
 
-        <ng-container *ngIf="currentStep === 4">
+        <ng-container *ngIf="currentStep === 5">
           <label>
             <input type="radio" [(ngModel)]="surveyData.converted_spring_to_internship" name="booleanAnswer" [value]="true">
             Yes

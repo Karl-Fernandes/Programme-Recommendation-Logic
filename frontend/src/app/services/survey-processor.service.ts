@@ -143,7 +143,7 @@ export class SurveyProcessorService {
 
     return {
       next_step: STEP_TYPES.SPRING_WEEKS,
-      question: "Have you attended any spring weeks?",
+      question: this.getSpringWeeksQuestionText(surveyData.sector),
       type: "boolean"
     };
   }
@@ -171,7 +171,7 @@ export class SurveyProcessorService {
 
     return {
       next_step: STEP_TYPES.SPRING_CONVERSION,
-      question: "Did you convert your spring week to a summer internship?",
+      question: this.getConversionQuestionText(surveyData.sector),
       type: "boolean"
     };
   }
@@ -306,7 +306,7 @@ export class SurveyProcessorService {
       case STEP_TYPES.SPRING_CONVERSION:
           return {
             next_step: STEP_TYPES.SPRING_WEEKS,
-            question: "Have you attended any spring weeks?",
+            question: this.getSpringWeeksQuestionText(surveyData.sector),
             type: "boolean"
           };
      
@@ -315,7 +315,7 @@ export class SurveyProcessorService {
         if (surveyData.has_spring_weeks === true && surveyData.converted_spring_to_internship === false) {
           return {
             next_step: STEP_TYPES.SPRING_CONVERSION,
-            question: "Did you convert your spring week to a summer internship?",
+            question: this.getConversionQuestionText(surveyData.sector),
             type: "boolean"
           };
         }
@@ -323,7 +323,7 @@ export class SurveyProcessorService {
         // If they came directly from spring weeks (no spring weeks), go back to spring weeks
         return {
           next_step: STEP_TYPES.SPRING_WEEKS,
-          question: "Have you attended any spring weeks?",
+          question: this.getSpringWeeksQuestionText(surveyData.sector),
           type: "boolean"
         };
 
@@ -332,7 +332,7 @@ export class SurveyProcessorService {
         if (surveyData.has_spring_weeks === true && surveyData.converted_spring_to_internship === true) {
           return {
             next_step: STEP_TYPES.SPRING_CONVERSION,
-            question: "Did you convert your spring week to a summer internship?",
+            question: this.getConversionQuestionText(surveyData.sector),
             type: "boolean"
           };
         }
@@ -439,6 +439,20 @@ export class SurveyProcessorService {
            baseKey as keyof typeof COMMENTARY_TEXTS;
   }
 
+  private getSpringWeeksQuestionText(sector?: string): string {
+    if (sector === SECTORS.TECH) {
+      return "Have you attended any insight programmes?";
+    }
+    return "Have you attended any spring weeks?";
+  }
+
+  private getConversionQuestionText(sector?: string): string {
+    if (sector === SECTORS.TECH) {
+      return "Did you convert your insight programme to a summer internship?";
+    }
+    return "Did you convert your spring week to a summer internship?";
+  }
+
   private processHighSchool(result: EligibilityResult, sector?: string): EligibilityResult {
     result.primary_tab = 'Pre-University';
     
@@ -506,10 +520,10 @@ export class SurveyProcessorService {
     // 1 year until graduation (penultimate year)
     if (yearsUntilGrad === 1) {
       result.primary_tab = 'Summer Internships';
-      result.secondary_tabs = ['Spring Weeks'];
+      result.secondary_tabs = [sector === SECTORS.TECH ? 'Insight Programmes' : 'Spring Weeks'];
       result.commentary = {
         [result.primary_tab]: COMMENTARY_TEXTS[this.getSectorCommentaryKey('Summer Internships', sector)],
-        'Spring Weeks': COMMENTARY_TEXTS['Summer Internships Masters Backup']
+        [result.secondary_tabs[0]]: COMMENTARY_TEXTS[this.getSectorCommentaryKey('Summer Internships Masters Backup', sector)]
       };
       return result;
     }
@@ -526,18 +540,25 @@ export class SurveyProcessorService {
   private processEarlyUniversity(result: EligibilityResult, yearOfStudy: number, hasPlacement: boolean, sector?: string): EligibilityResult {
     if (hasPlacement) {
       result.primary_tab = 'Industrial Placements';
-      result.secondary_tabs = [yearOfStudy === 2 ? 'Off-Cycle Internships' : 'Spring Weeks'];
+      const secondaryTab = yearOfStudy === 2 ? 'Off-Cycle Internships' : 
+                          (sector === SECTORS.TECH ? 'Insight Programmes' : 'Spring Weeks');
+      result.secondary_tabs = [secondaryTab];
       result.commentary = {
         [result.primary_tab]: yearOfStudy === 1 
           ? COMMENTARY_TEXTS[this.getSectorCommentaryKey('Industrial Placements First Year', sector)]
           : COMMENTARY_TEXTS[this.getSectorCommentaryKey('Industrial Placements Later Year', sector)],
         [result.secondary_tabs[0]]: yearOfStudy === 2 
           ? COMMENTARY_TEXTS[this.getSectorCommentaryKey('Off-Cycle Internships', sector)]
-          : COMMENTARY_TEXTS[this.getSectorCommentaryKey('Spring Weeks More Than 2', sector)]
+          : COMMENTARY_TEXTS[this.getSectorCommentaryKey(sector === SECTORS.TECH ? 'Insight Programmes More Than 2' : 'Spring Weeks More Than 2', sector)]
       };
     } else {
-      result.primary_tab = 'Spring Weeks';
-      result.commentary = { [result.primary_tab]: COMMENTARY_TEXTS[this.getSectorCommentaryKey('Spring Weeks More Than 2', sector)] };
+      if (sector === SECTORS.TECH) {
+        result.primary_tab = 'Insight Programmes';
+        result.commentary = { [result.primary_tab]: COMMENTARY_TEXTS[this.getSectorCommentaryKey('Insight Programmes More Than 2', sector)] };
+      } else {
+        result.primary_tab = 'Spring Weeks';
+        result.commentary = { [result.primary_tab]: COMMENTARY_TEXTS[this.getSectorCommentaryKey('Spring Weeks More Than 2', sector)] };
+      }
     }
     return result;
   }
@@ -572,8 +593,13 @@ export class SurveyProcessorService {
   }
 
   private defaultSpringWeeks(result: EligibilityResult, sector?: string): EligibilityResult {
-    result.primary_tab = 'Spring Weeks';
-    result.commentary = { [result.primary_tab]: COMMENTARY_TEXTS[this.getSectorCommentaryKey('Spring Weeks', sector)] };
+    if (sector === SECTORS.TECH) {
+      result.primary_tab = 'Insight Programmes';
+      result.commentary = { [result.primary_tab]: COMMENTARY_TEXTS[this.getSectorCommentaryKey('Insight Programmes', sector)] };
+    } else {
+      result.primary_tab = 'Spring Weeks';
+      result.commentary = { [result.primary_tab]: COMMENTARY_TEXTS[this.getSectorCommentaryKey('Spring Weeks', sector)] };
+    }
     return result;
   }
 }
