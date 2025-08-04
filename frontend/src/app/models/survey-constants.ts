@@ -4,18 +4,26 @@ export const EDUCATION_STAGES = {
   GRADUATE: 'graduate'
 } as const;
 
+export const SECTORS = {
+  TECH: 'Technology',
+  LAW: 'Law',
+  FINANCE: 'Finance'
+} as const;
+
 export const STEP_TYPES = {
   WELCOME: 0,
-  EDUCATION_STAGE: 1,
-  UNIVERSITY_TIMELINE: 2,
-  SPRING_WEEKS: 3,
-  SPRING_CONVERSION: 4,
+  SECTOR: 1,
+  EDUCATION_STAGE: 2,
+  UNIVERSITY_TIMELINE: 3,
+  SPRING_WEEKS: 4,
+  SPRING_CONVERSION: 5,
   INTERNSHIP_EXPERIENCE: 'internship_experience',
   GRAD_OFFER: 'grad_offer',
   FINAL: 'final'
 } as const;
 
 export const COMMENTARY_TEXTS = {
+  // Finance-specific commentary (current default)
   'Pre-University': "As a high school student, every opportunity you are eligible for will be listed on the Pre-University tab.",
   'Spring Weeks': "As you are two years away from graduating, every opportunity you are eligible for will be listed on the Spring Weeks tab. This includes a handful of summer internships open for all students.",
   'Spring Weeks More Than 2': "As you are not two years out from graduation, you are technically not eligible for Spring Weeks. However, many 4+ year courses are flexible in their graduation date; if you are on an integrated Master's, your university will normally allow you to switch to a Bachelor's to become eligible for Spring Weeks with no issues. You can always switch back to an Integrated Master's if you change your mind. Similarly, if you have an industrial placement year, you can often switch to the equivalent course without an industrial placement to become eligible for Spring Weeks, and switch back after your spring weeks if you choose to continue with your industrial placement degree.",
@@ -36,10 +44,27 @@ export const COMMENTARY_TEXTS = {
   'Graduate Schemes Final Year Experience': "Graduate programmes are unrealistically competitive for most roles in finance. You should still send applications for less competitive companies, but prioritise off-cycle internships and summer internships.",
   'Graduate Schemes Final Year No Experience': "Graduate programmes are unrealistically competitive for most roles in finance. You should still send applications for smaller or less competitive companies, but prioritise summer internships for the most competitive roles.",
   'Off-Cycle Internships Final Year No Experience': "You are eligible for off-cycle internships, but these are typically unattainable for those without relevant experience. You should still submit applications where possible, but prioritise applying for summer internships.",
-  'Industrial Placements Later Year': "Although placements are typically completed after your second year, some companies offer flexible placement opportunities for later-year students. Consider reaching out directly to companies to inquire about placement possibilities aligned with your experience level."
+  'Industrial Placements Later Year': "Although placements are typically completed after your second year, some companies offer flexible placement opportunities for later-year students. Consider reaching out directly to companies to inquire about placement possibilities aligned with your experience level.",
+  
+  // Technology-specific commentary
+  'Tech Pre-University': "As a high school student interested in technology, focus on building programming skills through online courses, coding bootcamps, and personal projects. Many tech companies offer apprenticeship programs and early talent initiatives.",
+  'Tech Spring Weeks': "Tech companies increasingly offer insight weeks and early career programs. Focus on building a strong GitHub portfolio and participating in hackathons to demonstrate your technical abilities.",
+  'Tech Summer Internships': "Technology internships are highly competitive but offer excellent learning opportunities. Focus on companies that match your technical interests - whether that's AI/ML, web development, cybersecurity, or data science.",
+  'Tech Graduate Schemes': "Tech graduate programs often emphasize technical skills over traditional finance metrics. Focus on demonstrating coding ability, problem-solving skills, and passion for technology through personal projects and contributions to open source.",
+  'Tech Industrial Placements': "Technology placements offer hands-on experience with cutting-edge projects. Many tech companies offer year-long placement programs that can lead to graduate job offers.",
+  'Tech Off-Cycle Internships': "Tech companies often hire on a rolling basis and may have opportunities throughout the year. Startups and scale-ups particularly offer flexible internship timings.",
+  
+  // Law-specific commentary  
+  'Law Pre-University': "As a high school student interested in law, focus on developing strong analytical and communication skills. Consider participating in debate societies and exploring different areas of law through work experience.",
+  'Law Spring Weeks': "Law firms offer vacation schemes rather than traditional spring weeks. These are typically 1-2 weeks and provide insight into different practice areas. Competition is intense, so apply early and broadly.",
+  'Law Summer Internships': "Legal internships (vacation schemes) are the primary route into training contracts. Most magic circle and top-tier firms recruit trainees almost exclusively through their vacation schemes.",
+  'Law Graduate Schemes': "Training contracts are the standard route into qualified legal practice. Competition is extremely fierce, with some firms receiving 2000+ applications for 20-30 places. Consider alternative routes like paralegal roles.",
+  'Law Industrial Placements': "Legal placements are less common than other sectors, but some firms offer longer-term paralegal positions or legal internships that can provide valuable experience.",
+  'Law Off-Cycle Internships': "Legal internships typically follow set recruitment cycles. However, smaller firms and in-house legal teams may offer more flexible timing. Consider expanding your search beyond traditional law firms."
 } as const;
 
 export type EducationStage = typeof EDUCATION_STAGES[keyof typeof EDUCATION_STAGES];
+export type Sector = typeof SECTORS[keyof typeof SECTORS]
 export type StepType = typeof STEP_TYPES[keyof typeof STEP_TYPES];
 export type CommentaryKey = keyof typeof COMMENTARY_TEXTS;
 

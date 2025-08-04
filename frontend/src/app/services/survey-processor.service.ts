@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { EDUCATION_STAGES, STEP_TYPES, EducationStage, StepType, COMMENTARY_TEXTS } from '../models/survey-constants';
+import { EDUCATION_STAGES, STEP_TYPES, EducationStage, StepType, COMMENTARY_TEXTS, SECTORS } from '../models/survey-constants';
 import { EligibilityResult } from '../models/eligibilty-result.model';
 
 export interface SurveyStepResponse {
@@ -29,15 +29,18 @@ export class SurveyProcessorService {
       switch (currentStep) {
         case STEP_TYPES.WELCOME:
           return {
-            next_step: STEP_TYPES.EDUCATION_STAGE,
-            question: "What is your current education stage?",
-            type: "select",
+            next_step: STEP_TYPES.SECTOR,
+            question: "Which sector are you interested in?",
+            type: "select_sector",
             options: [
-              EDUCATION_STAGES.HIGH_SCHOOL,
-              EDUCATION_STAGES.UNIVERSITY,
-              EDUCATION_STAGES.GRADUATE
+              SECTORS.FINANCE,
+              SECTORS.TECH,
+              SECTORS.LAW
             ]
           };
+
+        case STEP_TYPES.SECTOR:
+          return this.handleSector(surveyData);
 
         case STEP_TYPES.EDUCATION_STAGE:
           return this.handleEducationStageStep(surveyData);
@@ -70,6 +73,30 @@ export class SurveyProcessorService {
       };
     }
   }
+
+  private handleSector(surveyData: any): SurveyStepResponse {
+    const sector = surveyData.sector;
+
+    if (!sector) {
+      return {
+        next_step: STEP_TYPES.SECTOR,
+        error: "Please select a sector"
+      };
+    }
+
+    // After sector selection, move to education stage
+    return {
+      next_step: STEP_TYPES.EDUCATION_STAGE,
+      question: "What is your current education stage?",
+      type: "select",
+      options: [
+        EDUCATION_STAGES.HIGH_SCHOOL,
+        EDUCATION_STAGES.UNIVERSITY,
+        EDUCATION_STAGES.GRADUATE
+      ]
+    };
+  }
+
 
   private handleEducationStageStep(surveyData: any): SurveyStepResponse {
     const educationStage = surveyData.education_stage;
@@ -238,10 +265,22 @@ export class SurveyProcessorService {
 
   private getPreviousStep(currentStep: StepType, surveyData: any): SurveyStepResponse {
     switch (currentStep) {
-      case STEP_TYPES.EDUCATION_STAGE:
+      case STEP_TYPES.SECTOR:
         return {
           next_step: STEP_TYPES.WELCOME,
           message: "Welcome to the Programme Eligibility Survey"
+        };
+
+      case STEP_TYPES.EDUCATION_STAGE:
+        return {
+          next_step: STEP_TYPES.SECTOR,
+          question: "Which sector are you interested in?",
+          type: "select_sector",
+          options: [
+            SECTORS.FINANCE,
+            SECTORS.TECH,
+            SECTORS.LAW
+          ]
         };
 
       case STEP_TYPES.UNIVERSITY_TIMELINE:
@@ -309,13 +348,13 @@ export class SurveyProcessorService {
 
       default:
         return {
-          next_step: STEP_TYPES.EDUCATION_STAGE,
-          question: "What is your current education stage?",
-          type: "select",
+          next_step: STEP_TYPES.SECTOR,
+          question: "Which sector are you interested in?",
+          type: "select_sector",
           options: [
-            EDUCATION_STAGES.HIGH_SCHOOL,
-            EDUCATION_STAGES.UNIVERSITY,
-            EDUCATION_STAGES.GRADUATE
+            SECTORS.FINANCE,
+            SECTORS.TECH,
+            SECTORS.LAW
           ]
         };
     }
@@ -348,6 +387,7 @@ export class SurveyProcessorService {
   }
 
   processEligibility(surveyData: any): EligibilityResult {
+    const sector = surveyData.sector;
     const educationStage = surveyData.education_stage;
     const hasSpringWeeks = surveyData.has_spring_weeks;
     const hasExperience = surveyData.has_experience;
@@ -366,18 +406,18 @@ export class SurveyProcessorService {
 
     // High school processing
     if (educationStage === EDUCATION_STAGES.HIGH_SCHOOL) {
-      return this.processHighSchool(result);
+      return this.processHighSchool(result, sector);
     }
 
     // Graduate processing
     if (educationStage === EDUCATION_STAGES.GRADUATE) {
-      return this.processGraduate(result, hasExperience || hasPlacement);
+      return this.processGraduate(result, hasExperience || hasPlacement, sector);
     }
 
     // University processing
     if (educationStage === EDUCATION_STAGES.UNIVERSITY) {
       const yearOfStudy = this.calculateYearOfStudy(surveyData);
-      return this.processUniversity(result, yearsUntilGrad, yearOfStudy, hasPlacement, hasGradOffer, hasExperience, hasSpringWeeks);
+      return this.processUniversity(result, yearsUntilGrad, yearOfStudy, hasPlacement, hasGradOffer, hasExperience, hasSpringWeeks, sector);
     }
 
     // Default case
@@ -386,26 +426,42 @@ export class SurveyProcessorService {
     return result;
   }
 
-  private processHighSchool(result: EligibilityResult): EligibilityResult {
+  private getSectorCommentaryKey(baseKey: string, sector?: string): keyof typeof COMMENTARY_TEXTS {
+    if (!sector) return baseKey as keyof typeof COMMENTARY_TEXTS;
+    
+    const sectorKey = sector === SECTORS.TECH ? `Tech ${baseKey}` :
+                     sector === SECTORS.LAW ? `Law ${baseKey}` :
+                     baseKey;
+    
+    // Check if sector-specific key exists, fallback to base key
+    return (sectorKey in COMMENTARY_TEXTS) ? 
+           sectorKey as keyof typeof COMMENTARY_TEXTS : 
+           baseKey as keyof typeof COMMENTARY_TEXTS;
+  }
+
+  private processHighSchool(result: EligibilityResult, sector?: string): EligibilityResult {
     result.primary_tab = 'Pre-University';
-    result.commentary = { [result.primary_tab]: COMMENTARY_TEXTS['Pre-University'] };
+    
+    // Use sector-specific commentary if available
+    const commentaryKey = this.getSectorCommentaryKey('Pre-University', sector);
+    result.commentary = { [result.primary_tab]: COMMENTARY_TEXTS[commentaryKey] };
     return result;
   }
 
-  private processGraduate(result: EligibilityResult, hasRelevantExperience: boolean): EligibilityResult {
+  private processGraduate(result: EligibilityResult, hasRelevantExperience: boolean, sector?: string): EligibilityResult {
     if (hasRelevantExperience) {
       result.primary_tab = 'Off-Cycle Internships';
       result.secondary_tabs = ['Graduate Schemes'];
       result.commentary = {
-        [result.primary_tab]: COMMENTARY_TEXTS['Graduated Exp'],
-        'Graduate Schemes': COMMENTARY_TEXTS['Graduate Schemes']
+        [result.primary_tab]: COMMENTARY_TEXTS[this.getSectorCommentaryKey('Graduated Exp', sector)],
+        'Graduate Schemes': COMMENTARY_TEXTS[this.getSectorCommentaryKey('Graduate Schemes', sector)]
       };
     } else {
       result.primary_tab = 'Graduate Schemes';
       result.secondary_tabs = ['Off-Cycle Internships'];
       result.commentary = {
-        [result.primary_tab]: COMMENTARY_TEXTS['Graduated No Exp'],
-        'Off-Cycle Internships': COMMENTARY_TEXTS['Off-Cycle Internships Grad No Exp']
+        [result.primary_tab]: COMMENTARY_TEXTS[this.getSectorCommentaryKey('Graduated No Exp', sector)],
+        'Off-Cycle Internships': COMMENTARY_TEXTS[this.getSectorCommentaryKey('Off-Cycle Internships Grad No Exp', sector)]
       };
     }
     return result;
@@ -418,16 +474,17 @@ export class SurveyProcessorService {
     hasPlacement: boolean, 
     hasGradOffer: boolean, 
     hasExperience: boolean,
-    hasSpringWeeks: boolean
+    hasSpringWeeks: boolean,
+    sector?: string
   ): EligibilityResult {
     
     if (yearsUntilGrad === null) {
-      return this.defaultSpringWeeks(result);
+      return this.defaultSpringWeeks(result, sector);
     }
 
     // More than 2 years until graduation
     if (yearsUntilGrad > 2) {
-      return this.processEarlyUniversity(result, yearOfStudy, hasPlacement);
+      return this.processEarlyUniversity(result, yearOfStudy, hasPlacement, sector);
     }
 
     // Exactly 2 years until graduation, year 2, with placement
@@ -435,15 +492,15 @@ export class SurveyProcessorService {
       result.primary_tab = 'Industrial Placements';
       result.secondary_tabs = ['Off-Cycle Internships'];
       result.commentary = {
-        [result.primary_tab]: COMMENTARY_TEXTS['Industrial Placements'],
-        'Off-Cycle Internships': COMMENTARY_TEXTS['Off-Cycle Internships']
+        [result.primary_tab]: COMMENTARY_TEXTS[this.getSectorCommentaryKey('Industrial Placements', sector)],
+        'Off-Cycle Internships': COMMENTARY_TEXTS[this.getSectorCommentaryKey('Off-Cycle Internships', sector)]
       };
       return result;
     }
 
     // Exactly 2 years until graduation (standard case)
     if (yearsUntilGrad === 2) {
-      return this.defaultSpringWeeks(result);
+      return this.defaultSpringWeeks(result, sector);
     }
 
     // 1 year until graduation (penultimate year)
@@ -451,7 +508,7 @@ export class SurveyProcessorService {
       result.primary_tab = 'Summer Internships';
       result.secondary_tabs = ['Spring Weeks'];
       result.commentary = {
-        [result.primary_tab]: COMMENTARY_TEXTS['Summer Internships'],
+        [result.primary_tab]: COMMENTARY_TEXTS[this.getSectorCommentaryKey('Summer Internships', sector)],
         'Spring Weeks': COMMENTARY_TEXTS['Summer Internships Masters Backup']
       };
       return result;
@@ -459,38 +516,38 @@ export class SurveyProcessorService {
 
     // Final year (0 years until graduation)
     if (yearsUntilGrad === 0) {
-      return this.processFinalYear(result, hasGradOffer, hasExperience || hasPlacement);
+      return this.processFinalYear(result, hasGradOffer, hasExperience || hasPlacement, sector);
     }
 
     // Default fallback
-    return this.defaultSpringWeeks(result);
+    return this.defaultSpringWeeks(result, sector);
   }
 
-  private processEarlyUniversity(result: EligibilityResult, yearOfStudy: number, hasPlacement: boolean): EligibilityResult {
+  private processEarlyUniversity(result: EligibilityResult, yearOfStudy: number, hasPlacement: boolean, sector?: string): EligibilityResult {
     if (hasPlacement) {
       result.primary_tab = 'Industrial Placements';
       result.secondary_tabs = [yearOfStudy === 2 ? 'Off-Cycle Internships' : 'Spring Weeks'];
       result.commentary = {
         [result.primary_tab]: yearOfStudy === 1 
-          ? COMMENTARY_TEXTS['Industrial Placements First Year'] 
-          : COMMENTARY_TEXTS['Industrial Placements Later Year'],
+          ? COMMENTARY_TEXTS[this.getSectorCommentaryKey('Industrial Placements First Year', sector)]
+          : COMMENTARY_TEXTS[this.getSectorCommentaryKey('Industrial Placements Later Year', sector)],
         [result.secondary_tabs[0]]: yearOfStudy === 2 
-          ? COMMENTARY_TEXTS['Off-Cycle Internships'] 
-          : COMMENTARY_TEXTS['Spring Weeks More Than 2']
+          ? COMMENTARY_TEXTS[this.getSectorCommentaryKey('Off-Cycle Internships', sector)]
+          : COMMENTARY_TEXTS[this.getSectorCommentaryKey('Spring Weeks More Than 2', sector)]
       };
     } else {
       result.primary_tab = 'Spring Weeks';
-      result.commentary = { [result.primary_tab]: COMMENTARY_TEXTS['Spring Weeks More Than 2'] };
+      result.commentary = { [result.primary_tab]: COMMENTARY_TEXTS[this.getSectorCommentaryKey('Spring Weeks More Than 2', sector)] };
     }
     return result;
   }
 
-  private processFinalYear(result: EligibilityResult, hasGradOffer: boolean, hasRelevantExperience: boolean): EligibilityResult {
+  private processFinalYear(result: EligibilityResult, hasGradOffer: boolean, hasRelevantExperience: boolean, sector?: string): EligibilityResult {
     if (hasGradOffer) {
       result.primary_tab = 'Graduate Schemes';
       result.secondary_tabs = ['Summer Internships', 'Off-Cycle Internships'];
       result.commentary = {
-        [result.primary_tab]: COMMENTARY_TEXTS['Graduate Schemes'],
+        [result.primary_tab]: COMMENTARY_TEXTS[this.getSectorCommentaryKey('Graduate Schemes', sector)],
         'Summer Internships': COMMENTARY_TEXTS['Summer Internships Masters Final Year'],
         'Off-Cycle Internships': COMMENTARY_TEXTS['Off-Cycle Internships Final Year']
       };
@@ -498,25 +555,25 @@ export class SurveyProcessorService {
       result.primary_tab = 'Off-Cycle Internships';
       result.secondary_tabs = ['Summer Internships', 'Graduate Schemes'];
       result.commentary = {
-        [result.primary_tab]: COMMENTARY_TEXTS['Final Year No Offer Exp'],
+        [result.primary_tab]: COMMENTARY_TEXTS[this.getSectorCommentaryKey('Final Year No Offer Exp', sector)],
         'Summer Internships': COMMENTARY_TEXTS['Summer Internships Final Year Experience'],
-        'Graduate Schemes': COMMENTARY_TEXTS['Graduate Schemes Final Year Experience']
+        'Graduate Schemes': COMMENTARY_TEXTS[this.getSectorCommentaryKey('Graduate Schemes Final Year Experience', sector)]
       };
     } else {
       result.primary_tab = 'Summer Internships';
       result.secondary_tabs = ['Off-Cycle Internships', 'Graduate Schemes'];
       result.commentary = {
-        [result.primary_tab]: COMMENTARY_TEXTS['Final Year No Offer No Exp'],
-        'Graduate Schemes': COMMENTARY_TEXTS['Graduate Schemes Final Year No Experience'],
-        'Off-Cycle Internships': COMMENTARY_TEXTS['Off-Cycle Internships Final Year No Experience']
+        [result.primary_tab]: COMMENTARY_TEXTS[this.getSectorCommentaryKey('Final Year No Offer No Exp', sector)],
+        'Graduate Schemes': COMMENTARY_TEXTS[this.getSectorCommentaryKey('Graduate Schemes Final Year No Experience', sector)],
+        'Off-Cycle Internships': COMMENTARY_TEXTS[this.getSectorCommentaryKey('Off-Cycle Internships Final Year No Experience', sector)]
       };
     }
     return result;
   }
 
-  private defaultSpringWeeks(result: EligibilityResult): EligibilityResult {
+  private defaultSpringWeeks(result: EligibilityResult, sector?: string): EligibilityResult {
     result.primary_tab = 'Spring Weeks';
-    result.commentary = { [result.primary_tab]: COMMENTARY_TEXTS['Spring Weeks'] };
+    result.commentary = { [result.primary_tab]: COMMENTARY_TEXTS[this.getSectorCommentaryKey('Spring Weeks', sector)] };
     return result;
   }
 }

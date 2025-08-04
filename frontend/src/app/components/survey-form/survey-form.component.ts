@@ -89,6 +89,11 @@ export class SurveyFormComponent {
         this.options = response.options || [];
         this.surveyData.education_stage = '';
       }
+
+      if (response.type == 'select_sector') {
+        this.options = response.options || [];
+        this.surveyData.sector = '';
+      }
       
       if (response.type === 'year_selection') {
         this.hasPlacementOption = response.has_placement === true;
@@ -108,6 +113,8 @@ export class SurveyFormComponent {
       // Set appropriate error message based on question type
       if (this.questionType === 'select') {
         this.error = 'Please select an option to continue';
+      } else if (this.questionType === 'select_sector') {
+        this.error = 'Please select an option to continue'
       } else if (this.questionType === 'boolean') {
         this.error = 'Please select Yes or No to continue';
       } else if (this.questionType === 'year_selection') {
@@ -158,6 +165,10 @@ export class SurveyFormComponent {
       this.questionType = response.type || '';
       
       if (response.type === 'select') {
+        this.options = response.options || [];
+      }
+
+      if (response.type === 'select_sector') {
         this.options = response.options || [];
       }
       
@@ -234,6 +245,10 @@ export class SurveyFormComponent {
     // Always validate based on current step/question type
     if (this.questionType === 'select') {
       return !!this.surveyData.education_stage;
+    }
+
+    if (this.questionType === 'select_sector') {
+      return !!this.surveyData.sector
     }
     
     if (this.questionType === 'boolean') {

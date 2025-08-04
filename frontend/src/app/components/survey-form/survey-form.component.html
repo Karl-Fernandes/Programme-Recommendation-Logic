@@ -31,6 +31,16 @@
       
       <h3>{{currentQuestion}}</h3>
 
+       <!-- Select Type Question -->
+      <div *ngIf="questionType === 'select_sector'">
+        <select [(ngModel)]="surveyData.sector" name="selectAnswer" required>
+          <option value="">-- Select --</option>
+          <option *ngFor="let option of options" [value]="option">
+            {{ option }}
+          </option>
+        </select>
+      </div> 
+
       <!-- Select Type Question -->
       <div *ngIf="questionType === 'select'">
         <select [(ngModel)]="surveyData.education_stage" name="selectAnswer" required>

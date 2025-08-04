@@ -1,5 +1,6 @@
 // survey-response.model.ts
 export interface SurveyResponse {
+  sector: string;
   education_stage: string;
   start_year?: number;        // When they began their degree
   graduation_year?: number;   // When they will finish their degree
