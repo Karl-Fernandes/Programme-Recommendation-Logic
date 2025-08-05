@@ -488,6 +488,12 @@ export class SurveyProcessorService {
     const isInFinalYear = yearOfStudy >= totalDuration;
 
 
+    // More than 2 years until graduation
+    if (yearsUntilGrad > 2) {
+      return this.processEarlyUniversity(result, yearOfStudy, hasPlacement, sector);
+    }
+
+
     // Year 2 + industrial placement (highest priority - regardless of years until graduation)
     if (yearOfStudy === 2 && hasPlacement) {
       result.primary_tab = 'Industrial Placements';
@@ -498,12 +504,7 @@ export class SurveyProcessorService {
       };
       return result;
     }
-    // More than 2 years until graduation
-    if (yearsUntilGrad > 2) {
-      return this.processEarlyUniversity(result, yearOfStudy, hasPlacement, sector);
-    }
-
-
+  
     // Exactly 2 years until graduation (standard case)
     if (yearsUntilGrad === 2) {
       if (sector === SECTORS.TECH) {
@@ -530,11 +531,6 @@ export class SurveyProcessorService {
       return result;
     }
 
-    // Final year - check if in final year of study OR 0 years until grad
-    if (isInFinalYear || yearsUntilGrad === 0) {
-      return this.processFinalYear(result, hasGradOffer, hasExperience || hasPlacement, sector);
-    }
-
     // 1 year until graduation (penultimate year) - only if NOT in final year of study
     if (yearsUntilGrad === 1 && !isInFinalYear) {
       result.primary_tab = 'Summer Internships';
@@ -546,6 +542,13 @@ export class SurveyProcessorService {
       return result;
     }
 
+
+    // Final year - check if in final year of study OR 0 years until grad
+    if (isInFinalYear || yearsUntilGrad === 0) {
+      return this.processFinalYear(result, hasGradOffer, hasExperience || hasPlacement, sector);
+    }
+
+    
     // Default fallback
     return this.processEarlyUniversity(result, yearOfStudy, hasPlacement, sector);
   }
