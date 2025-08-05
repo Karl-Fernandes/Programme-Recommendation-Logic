@@ -129,12 +129,10 @@ export class SurveyProcessorService {
 
   private handleUniversityTimelineStep(surveyData: any): SurveyStepResponse {
     const yearOfStudy = this.calculateYearOfStudy(surveyData);
-    const graduationYear = parseInt(surveyData.graduation_year);
-    const currentYear = new Date().getFullYear();
-    const yearsUntilGrad = graduationYear - currentYear;
+    const yearsUntilGrad = this.calculateYearsUntilGraduation(surveyData);
     
     // If year 1 or more than 2 years until graduation, end survey early
-    if (yearOfStudy < 2 || yearsUntilGrad <= 0) {
+    if (yearOfStudy < 2 || (yearsUntilGrad !== null && yearsUntilGrad <= 0)) {
       return {
         next_step: STEP_TYPES.FINAL,
         message: "Thank you for completing the survey!"
@@ -178,17 +176,15 @@ export class SurveyProcessorService {
 
   private handleSpringConversionStep(surveyData: any): SurveyStepResponse {
     const convertedSpringToInternship = surveyData.converted_spring_to_internship;
-    const graduationYear = parseInt(surveyData.graduation_year);
-    const currentYear = new Date().getFullYear();
-    const yearsUntilGrad = graduationYear - currentYear;
+    const yearsUntilGrad = this.calculateYearsUntilGraduation(surveyData);
     const yearOfStudy = this.calculateYearOfStudy(surveyData);
     
     // If they converted spring week to internship, set has_experience to true
     if (convertedSpringToInternship) {
       surveyData.has_experience = true;
       
-      // Only ask about grad offer if they're in final year (0 years until grad) or year 4+
-      if (yearsUntilGrad === 0 || yearOfStudy >= 4) {
+      // Only ask about grad offer if they're in final year (0 years until grad), penultimate year (1 year until grad), or year 4+
+      if ((yearsUntilGrad !== null && yearsUntilGrad <= 1) || yearOfStudy >= 4) {
         return {
           next_step: STEP_TYPES.GRAD_OFFER,
           question: "Do you have a graduate offer?",
@@ -202,7 +198,7 @@ export class SurveyProcessorService {
         };
       }
     }
-    
+  
     // If they didn't convert, ask about other internship experience (they're year 2+ and had spring weeks)
     return {
       next_step: STEP_TYPES.INTERNSHIP_EXPERIENCE,
@@ -230,12 +226,10 @@ export class SurveyProcessorService {
 
     // For university students, check if they're in final year or year 4+
     const yearOfStudy = this.calculateYearOfStudy(surveyData);
-    const graduationYear = parseInt(surveyData.graduation_year);
-    const currentYear = new Date().getFullYear();
-    const yearsUntilGrad = graduationYear - currentYear;
+    const yearsUntilGrad = this.calculateYearsUntilGraduation(surveyData);
 
-    // Ask about grad offer if final year (0 years until grad) or already year 4+
-    if (yearsUntilGrad === 0 || yearOfStudy >= 4) {
+    // Ask about grad offer if final year (0 years until grad), penultimate year (1 year until grad), or already year 4+
+    if ((yearsUntilGrad !== null && yearsUntilGrad <= 1) || yearOfStudy >= 4) {
       return {
           next_step: STEP_TYPES.GRAD_OFFER,
           question: "Do you have a graduate offer?",
@@ -345,7 +339,6 @@ export class SurveyProcessorService {
         };
 
 
-
       default:
         return {
           next_step: STEP_TYPES.SECTOR,
@@ -360,6 +353,34 @@ export class SurveyProcessorService {
     }
   }
 
+  private getSpringWeeksQuestionText(sector?: string): string {
+    if (sector === SECTORS.TECH) {
+      return "Have you attended any insight programmes?";
+    }
+    return "Have you attended any spring weeks?";
+  }
+
+  private getConversionQuestionText(sector?: string): string {
+    if (sector === SECTORS.TECH) {
+      return "Did you convert your insight programme to a summer internship?";
+    }
+    return "Did you convert your spring week to a summer internship?";
+  }
+
+  private getCurrentAcademicYear(): number {
+    const currentDate = new Date();
+    // Academic year starts in July, so if we're before July (month < 6), use previous year
+    return currentDate.getMonth() < 6 ? currentDate.getFullYear() - 1 : currentDate.getFullYear();
+  }
+
+  private calculateYearsUntilGraduation(surveyData: any): number | null {
+    const graduationYear = parseInt(surveyData.graduation_year);
+    if (!graduationYear) return null;
+    
+    const academicYear = this.getCurrentAcademicYear();
+    return graduationYear - academicYear;
+  }
+
   calculateYearOfStudy(surveyData: any): number {
     const startYear = parseInt(surveyData.start_year);
     const graduationYear = parseInt(surveyData.graduation_year);
@@ -368,10 +389,7 @@ export class SurveyProcessorService {
       throw new Error("Start year and graduation year are required");
     }
 
-    const currentDate = new Date();
-    // Academic year starts in September, so if we're before September, use previous year
-    const academicYear = currentDate.getMonth() < 8 ? currentDate.getFullYear() - 1 : currentDate.getFullYear();
-    
+    const academicYear = this.getCurrentAcademicYear();
     const yearOfStudy = academicYear - startYear + 1;
     const totalDuration = graduationYear - startYear;
 
@@ -393,9 +411,7 @@ export class SurveyProcessorService {
     const hasExperience = surveyData.has_experience;
     const hasGradOffer = surveyData.has_grad_offer;
     const hasPlacement = surveyData.has_placement;
-    const graduationYear = parseInt(surveyData.graduation_year);
-    const currentYear = new Date().getFullYear();
-    const yearsUntilGrad = graduationYear ? graduationYear - currentYear : null;
+    const yearsUntilGrad = this.calculateYearsUntilGraduation(surveyData);
 
     // Initialize result structure
     const result: EligibilityResult = {
@@ -409,16 +425,17 @@ export class SurveyProcessorService {
       return this.processHighSchool(result, sector);
     }
 
+    // University processing
+    if (educationStage === EDUCATION_STAGES.UNIVERSITY) {
+      const yearOfStudy = this.calculateYearOfStudy(surveyData);
+      return this.processUniversity(result, yearsUntilGrad, yearOfStudy, hasPlacement, hasGradOffer, hasExperience, hasSpringWeeks, sector, surveyData);
+    }
+
     // Graduate processing
     if (educationStage === EDUCATION_STAGES.GRADUATE) {
       return this.processGraduate(result, hasExperience || hasPlacement, sector);
     }
 
-    // University processing
-    if (educationStage === EDUCATION_STAGES.UNIVERSITY) {
-      const yearOfStudy = this.calculateYearOfStudy(surveyData);
-      return this.processUniversity(result, yearsUntilGrad, yearOfStudy, hasPlacement, hasGradOffer, hasExperience, hasSpringWeeks, sector);
-    }
 
     // Default case
     result.primary_tab = 'Pre-University';
@@ -439,45 +456,12 @@ export class SurveyProcessorService {
            baseKey as keyof typeof COMMENTARY_TEXTS;
   }
 
-  private getSpringWeeksQuestionText(sector?: string): string {
-    if (sector === SECTORS.TECH) {
-      return "Have you attended any insight programmes?";
-    }
-    return "Have you attended any spring weeks?";
-  }
-
-  private getConversionQuestionText(sector?: string): string {
-    if (sector === SECTORS.TECH) {
-      return "Did you convert your insight programme to a summer internship?";
-    }
-    return "Did you convert your spring week to a summer internship?";
-  }
-
   private processHighSchool(result: EligibilityResult, sector?: string): EligibilityResult {
     result.primary_tab = 'Pre-University';
-    
-    // Use sector-specific commentary if available
-    const commentaryKey = this.getSectorCommentaryKey('Pre-University', sector);
-    result.commentary = { [result.primary_tab]: COMMENTARY_TEXTS[commentaryKey] };
-    return result;
-  }
-
-  private processGraduate(result: EligibilityResult, hasRelevantExperience: boolean, sector?: string): EligibilityResult {
-    if (hasRelevantExperience) {
-      result.primary_tab = 'Off-Cycle Internships';
-      result.secondary_tabs = ['Graduate Schemes'];
-      result.commentary = {
-        [result.primary_tab]: COMMENTARY_TEXTS[this.getSectorCommentaryKey('Graduated Exp', sector)],
-        'Graduate Schemes': COMMENTARY_TEXTS[this.getSectorCommentaryKey('Graduate Schemes', sector)]
-      };
-    } else {
-      result.primary_tab = 'Graduate Schemes';
-      result.secondary_tabs = ['Off-Cycle Internships'];
-      result.commentary = {
-        [result.primary_tab]: COMMENTARY_TEXTS[this.getSectorCommentaryKey('Graduated No Exp', sector)],
-        'Off-Cycle Internships': COMMENTARY_TEXTS[this.getSectorCommentaryKey('Off-Cycle Internships Grad No Exp', sector)]
-      };
-    }
+    result.secondary_tabs = [];
+    result.commentary = { 
+      [result.primary_tab]: COMMENTARY_TEXTS[this.getSectorCommentaryKey('Pre-University', sector)]
+    };
     return result;
   }
 
@@ -489,27 +473,25 @@ export class SurveyProcessorService {
     hasGradOffer: boolean, 
     hasExperience: boolean,
     hasSpringWeeks: boolean,
-    sector?: string
+    sector?: string,
+    surveyData?: any
   ): EligibilityResult {
     
     if (yearsUntilGrad === null) {
       return this.defaultSpringWeeks(result, sector);
     }
 
+    // Calculate total degree duration to determine if in final year
+    const startYear = parseInt(surveyData?.start_year);
+    const graduationYear = parseInt(surveyData?.graduation_year);
+    const totalDuration = graduationYear - startYear;
+    const isInFinalYear = yearOfStudy >= totalDuration;
+
+    
+
     // More than 2 years until graduation
     if (yearsUntilGrad > 2) {
       return this.processEarlyUniversity(result, yearOfStudy, hasPlacement, sector);
-    }
-
-    // Exactly 2 years until graduation, year 2, with placement
-    if (yearsUntilGrad === 2 && yearOfStudy === 2 && hasPlacement) {
-      result.primary_tab = 'Industrial Placements';
-      result.secondary_tabs = ['Off-Cycle Internships'];
-      result.commentary = {
-        [result.primary_tab]: COMMENTARY_TEXTS[this.getSectorCommentaryKey('Industrial Placements', sector)],
-        'Off-Cycle Internships': COMMENTARY_TEXTS[this.getSectorCommentaryKey('Off-Cycle Internships', sector)]
-      };
-      return result;
     }
 
     // Exactly 2 years until graduation (standard case)
@@ -517,8 +499,28 @@ export class SurveyProcessorService {
       return this.defaultSpringWeeks(result, sector);
     }
 
-    // 1 year until graduation (penultimate year)
-    if (yearsUntilGrad === 1) {
+    // Exactly 2 years until graduation, year 2, with placement
+    if (yearOfStudy === 2 && hasPlacement) {
+      result.primary_tab = 'Industrial Placements';
+      if (sector === SECTORS.TECH) {
+        // Tech: Industrial Placements only, no secondary
+        result.secondary_tabs = [];
+        result.commentary = {
+          [result.primary_tab]: COMMENTARY_TEXTS['Tech Industrial Placements']
+        };
+      } else {
+        // Finance: Industrial Placements primary, Off-Cycle secondary
+        result.secondary_tabs = ['Off-Cycle Internships'];
+        result.commentary = {
+          [result.primary_tab]: COMMENTARY_TEXTS['Industrial Placements'],
+          'Off-Cycle Internships': COMMENTARY_TEXTS['Off-Cycle Internships']
+        };
+      }
+      return result;
+    }
+
+    // 1 year until graduation (penultimate year) - only if NOT in final year of study
+    if (yearsUntilGrad === 2 && !isInFinalYear) {
       result.primary_tab = 'Summer Internships';
       result.secondary_tabs = [sector === SECTORS.TECH ? 'Insight Programmes' : 'Spring Weeks'];
       result.commentary = {
@@ -528,10 +530,12 @@ export class SurveyProcessorService {
       return result;
     }
 
-    // Final year (0 years until graduation)
-    if (yearsUntilGrad === 0) {
+    
+    // Final year - check if in final year of study OR 0 years until grad
+    if (isInFinalYear || yearsUntilGrad === 1) {
       return this.processFinalYear(result, hasGradOffer, hasExperience || hasPlacement, sector);
     }
+
 
     // Default fallback
     return this.defaultSpringWeeks(result, sector);
@@ -539,36 +543,70 @@ export class SurveyProcessorService {
 
   private processEarlyUniversity(result: EligibilityResult, yearOfStudy: number, hasPlacement: boolean, sector?: string): EligibilityResult {
     if (hasPlacement) {
+      if (sector == SECTORS.TECH)
       result.primary_tab = 'Industrial Placements';
-      const secondaryTab = yearOfStudy === 2 ? 'Off-Cycle Internships' : 
-                          (sector === SECTORS.TECH ? 'Insight Programmes' : 'Spring Weeks');
-      result.secondary_tabs = [secondaryTab];
-      result.commentary = {
-        [result.primary_tab]: yearOfStudy === 1 
-          ? COMMENTARY_TEXTS[this.getSectorCommentaryKey('Industrial Placements First Year', sector)]
-          : COMMENTARY_TEXTS[this.getSectorCommentaryKey('Industrial Placements Later Year', sector)],
-        [result.secondary_tabs[0]]: yearOfStudy === 2 
-          ? COMMENTARY_TEXTS[this.getSectorCommentaryKey('Off-Cycle Internships', sector)]
-          : COMMENTARY_TEXTS[this.getSectorCommentaryKey(sector === SECTORS.TECH ? 'Insight Programmes More Than 2' : 'Spring Weeks More Than 2', sector)]
-      };
+      if (sector === SECTORS.TECH) {
+       result.commentary = {
+          [result.primary_tab]: COMMENTARY_TEXTS['Tech Industrial Placements Early Years'],
+          'Spring Weeks': COMMENTARY_TEXTS['Tech Insight Programmes More Than 2'],
+        };
+      } else {
+       
+        result.commentary = {
+          [result.primary_tab]: COMMENTARY_TEXTS['Industrial Placements Early Years'],
+          'Spring Weeks': COMMENTARY_TEXTS['Spring Weeks More Than 2'],
+        };
+      }
     } else {
       if (sector === SECTORS.TECH) {
         result.primary_tab = 'Insight Programmes';
-        result.commentary = { [result.primary_tab]: COMMENTARY_TEXTS[this.getSectorCommentaryKey('Insight Programmes More Than 2', sector)] };
+        result.secondary_tabs = [];
+        result.commentary = { [result.primary_tab]: COMMENTARY_TEXTS['Tech Insight Programmes More Than 2'] };
       } else {
         result.primary_tab = 'Spring Weeks';
-        result.commentary = { [result.primary_tab]: COMMENTARY_TEXTS[this.getSectorCommentaryKey('Spring Weeks More Than 2', sector)] };
+        result.secondary_tabs = [];
+        result.commentary = { [result.primary_tab]: COMMENTARY_TEXTS['Spring Weeks More Than 2'] };
       }
     }
     return result;
   }
 
   private processFinalYear(result: EligibilityResult, hasGradOffer: boolean, hasRelevantExperience: boolean, sector?: string): EligibilityResult {
+    if (sector === SECTORS.TECH) {
+      return this.processTechFinalYear(result, hasGradOffer, hasRelevantExperience);
+    } else {
+      return this.processFinanceFinalYear(result, hasGradOffer, hasRelevantExperience);
+    }
+  }
+
+  private processTechFinalYear(result: EligibilityResult, hasGradOffer: boolean, hasRelevantExperience: boolean): EligibilityResult {
+    if (hasGradOffer) {
+      result.primary_tab = 'Graduate Schemes';
+      result.secondary_tabs = ['Summer Internships'];
+      result.commentary = {
+        [result.primary_tab]: COMMENTARY_TEXTS['Tech Graduate Schemes'],
+        'Summer Internships': COMMENTARY_TEXTS['Tech Graduate Schemes Summer Internship']
+      };
+    } else {
+      // Both cases (with/without experience) use same logic for tech
+      result.primary_tab = 'Graduate Schemes';
+      result.secondary_tabs = ['Summer Internships'];
+      result.commentary = {
+        [result.primary_tab]: hasRelevantExperience ? 
+          COMMENTARY_TEXTS['Tech Graduate Schemes Final Year Experience'] : 
+          COMMENTARY_TEXTS['Tech Graduate Schemes Final Year No Experience'],
+        'Summer Internships': COMMENTARY_TEXTS['Tech Summer Internships Final Year Experience']
+      };
+    }
+    return result;
+  }
+
+  private processFinanceFinalYear(result: EligibilityResult, hasGradOffer: boolean, hasRelevantExperience: boolean): EligibilityResult {
     if (hasGradOffer) {
       result.primary_tab = 'Graduate Schemes';
       result.secondary_tabs = ['Summer Internships', 'Off-Cycle Internships'];
       result.commentary = {
-        [result.primary_tab]: COMMENTARY_TEXTS[this.getSectorCommentaryKey('Graduate Schemes', sector)],
+        [result.primary_tab]: COMMENTARY_TEXTS['Graduate Schemes'],
         'Summer Internships': COMMENTARY_TEXTS['Summer Internships Masters Final Year'],
         'Off-Cycle Internships': COMMENTARY_TEXTS['Off-Cycle Internships Final Year']
       };
@@ -576,18 +614,47 @@ export class SurveyProcessorService {
       result.primary_tab = 'Off-Cycle Internships';
       result.secondary_tabs = ['Summer Internships', 'Graduate Schemes'];
       result.commentary = {
-        [result.primary_tab]: COMMENTARY_TEXTS[this.getSectorCommentaryKey('Final Year No Offer Exp', sector)],
+        [result.primary_tab]: COMMENTARY_TEXTS['Final Year No Offer Exp'],
         'Summer Internships': COMMENTARY_TEXTS['Summer Internships Final Year Experience'],
-        'Graduate Schemes': COMMENTARY_TEXTS[this.getSectorCommentaryKey('Graduate Schemes Final Year Experience', sector)]
+        'Graduate Schemes': COMMENTARY_TEXTS['Graduate Schemes Final Year Experience']
       };
     } else {
       result.primary_tab = 'Summer Internships';
       result.secondary_tabs = ['Off-Cycle Internships', 'Graduate Schemes'];
       result.commentary = {
-        [result.primary_tab]: COMMENTARY_TEXTS[this.getSectorCommentaryKey('Final Year No Offer No Exp', sector)],
-        'Graduate Schemes': COMMENTARY_TEXTS[this.getSectorCommentaryKey('Graduate Schemes Final Year No Experience', sector)],
-        'Off-Cycle Internships': COMMENTARY_TEXTS[this.getSectorCommentaryKey('Off-Cycle Internships Final Year No Experience', sector)]
+        [result.primary_tab]: COMMENTARY_TEXTS['Final Year No Offer No Exp'],
+        'Graduate Schemes': COMMENTARY_TEXTS['Graduate Schemes Final Year No Experience'],
+        'Off-Cycle Internships': COMMENTARY_TEXTS['Off-Cycle Internships Final Year No Experience']
       };
+    }
+    return result;
+  }
+
+  private processGraduate(result: EligibilityResult, hasRelevantExperience: boolean, sector?: string): EligibilityResult {
+    if (sector === SECTORS.TECH) {
+      // Tech: Always Graduate Schemes only
+      result.primary_tab = 'Graduate Schemes';
+      result.secondary_tabs = [];
+      result.commentary = {
+        [result.primary_tab]: COMMENTARY_TEXTS['Tech Graduated No Exp']
+      };
+    } else {
+      // Finance: Different logic based on experience
+      if (hasRelevantExperience) {
+        result.primary_tab = 'Off-Cycle Internships';
+        result.secondary_tabs = ['Graduate Schemes'];
+        result.commentary = {
+          [result.primary_tab]: COMMENTARY_TEXTS['Graduated Exp'],
+          'Graduate Schemes': COMMENTARY_TEXTS['Graduated Exp Secondary']
+        };
+      } else {
+        result.primary_tab = 'Graduate Schemes';
+        result.secondary_tabs = ['Off-Cycle Internships'];
+        result.commentary = {
+          [result.primary_tab]: COMMENTARY_TEXTS['Graduated No Exp'],
+          'Off-Cycle Internships': COMMENTARY_TEXTS['Off-Cycle Internships Grad No Exp']
+        };
+      }
     }
     return result;
   }
@@ -595,10 +662,12 @@ export class SurveyProcessorService {
   private defaultSpringWeeks(result: EligibilityResult, sector?: string): EligibilityResult {
     if (sector === SECTORS.TECH) {
       result.primary_tab = 'Insight Programmes';
-      result.commentary = { [result.primary_tab]: COMMENTARY_TEXTS[this.getSectorCommentaryKey('Insight Programmes', sector)] };
+      result.secondary_tabs = [];
+      result.commentary = { [result.primary_tab]: COMMENTARY_TEXTS['Tech Insight Programmes'] };
     } else {
       result.primary_tab = 'Spring Weeks';
-      result.commentary = { [result.primary_tab]: COMMENTARY_TEXTS[this.getSectorCommentaryKey('Spring Weeks', sector)] };
+      result.secondary_tabs = [];
+      result.commentary = { [result.primary_tab]: COMMENTARY_TEXTS['Spring Weeks'] };
     }
     return result;
   }
