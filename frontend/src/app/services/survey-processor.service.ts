@@ -476,6 +476,16 @@ export class SurveyProcessorService {
     sector?: string,
     surveyData?: any
   ): EligibilityResult {
+
+    // Debug logging
+    console.log('DEBUG processUniversity:', {
+      yearsUntilGrad,
+      yearOfStudy,
+      hasPlacement,
+      sector,
+      startYear: surveyData?.start_year,
+      graduationYear: surveyData?.graduation_year
+    });
     
     if (yearsUntilGrad === null) {
       return this.processEarlyUniversity(result, yearOfStudy, hasPlacement, sector);
@@ -487,12 +497,8 @@ export class SurveyProcessorService {
     const totalDuration = graduationYear - startYear;
     const isInFinalYear = yearOfStudy >= totalDuration;
 
-    // More than 2 years until graduation OR exactly 2 years until graduation
-    if (yearsUntilGrad >= 2) {
-      return this.processEarlyUniversity(result, yearOfStudy, hasPlacement, sector);
-    }
 
-    // Exactly 2 years until graduation, year 2, with placement
+    // Year 2 + industrial placement (MOVED TO TOP - regardless of years until graduation)
     if (yearOfStudy === 2 && hasPlacement) {
       result.primary_tab = 'Industrial Placements';
       if (sector === SECTORS.TECH) {
@@ -511,8 +517,16 @@ export class SurveyProcessorService {
       }
       return result;
     }
+    // More than 2 years until graduation
+    if (yearsUntilGrad > 2) {
+      return this.processEarlyUniversity(result, yearOfStudy, hasPlacement, sector);
+    }
 
-    
+
+    // Exactly 2 years until graduation (standard case)
+    if (yearsUntilGrad === 2) {
+      return this.processEarlyUniversity(result, yearOfStudy, hasPlacement, sector);
+    }
 
     // Final year - check if in final year of study OR 0 years until grad
     if (isInFinalYear || yearsUntilGrad === 0) {
@@ -520,7 +534,7 @@ export class SurveyProcessorService {
     }
 
     // 1 year until graduation (penultimate year) - only if NOT in final year of study
-    if (yearsUntilGrad === 2 && !isInFinalYear) {
+    if (yearsUntilGrad === 1 && !isInFinalYear) {
       result.primary_tab = 'Summer Internships';
       result.secondary_tabs = [sector === SECTORS.TECH ? 'Insight Programmes' : 'Spring Weeks'];
       result.commentary = {
