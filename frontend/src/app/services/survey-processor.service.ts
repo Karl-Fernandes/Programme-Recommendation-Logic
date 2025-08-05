@@ -476,16 +476,6 @@ export class SurveyProcessorService {
     sector?: string,
     surveyData?: any
   ): EligibilityResult {
-
-    // Debug logging
-    console.log('DEBUG processUniversity:', {
-      yearsUntilGrad,
-      yearOfStudy,
-      hasPlacement,
-      sector,
-      startYear: surveyData?.start_year,
-      graduationYear: surveyData?.graduation_year
-    });
     
     if (yearsUntilGrad === null) {
       return this.processEarlyUniversity(result, yearOfStudy, hasPlacement, sector);
@@ -498,23 +488,14 @@ export class SurveyProcessorService {
     const isInFinalYear = yearOfStudy >= totalDuration;
 
 
-    // Year 2 + industrial placement (MOVED TO TOP - regardless of years until graduation)
+    // Year 2 + industrial placement (highest priority - regardless of years until graduation)
     if (yearOfStudy === 2 && hasPlacement) {
       result.primary_tab = 'Industrial Placements';
-      if (sector === SECTORS.TECH) {
-        // Tech: Industrial Placements only, no secondary
-        result.secondary_tabs = [];
-        result.commentary = {
-          [result.primary_tab]: COMMENTARY_TEXTS['Tech Industrial Placements']
-        };
-      } else {
-        // Finance: Industrial Placements primary, Off-Cycle secondary
-        result.secondary_tabs = ['Off-Cycle Internships'];
-        result.commentary = {
-          [result.primary_tab]: COMMENTARY_TEXTS['Industrial Placements'],
-          'Off-Cycle Internships': COMMENTARY_TEXTS['Off-Cycle Internships']
-        };
-      }
+      // No secondary tabs for both Tech and Finance
+      result.secondary_tabs = [];
+      result.commentary = {
+        [result.primary_tab]: COMMENTARY_TEXTS['Industrial Placements']
+      };
       return result;
     }
     // More than 2 years until graduation
@@ -525,7 +506,28 @@ export class SurveyProcessorService {
 
     // Exactly 2 years until graduation (standard case)
     if (yearsUntilGrad === 2) {
-      return this.processEarlyUniversity(result, yearOfStudy, hasPlacement, sector);
+      if (sector === SECTORS.TECH) {
+        if (hasPlacement) {
+          // Tech with placement: Industrial Placements primary, Insight Programmes secondary
+          result.primary_tab = 'Industrial Placements';
+          result.secondary_tabs = ['Insight Programmes'];
+          result.commentary = {
+            [result.primary_tab]: COMMENTARY_TEXTS['Tech Industrial Placements'],
+            'Insight Programmes': COMMENTARY_TEXTS['Tech Insight Programmes']
+          };
+        } else {
+          // Tech without placement: Insight Programmes primary, no secondary
+          result.primary_tab = 'Insight Programmes';
+          result.secondary_tabs = [];
+          result.commentary = {
+            [result.primary_tab]: COMMENTARY_TEXTS['Tech Insight Programmes']
+          };
+        }
+      } else {
+        // Finance: Use early university logic
+        return this.processEarlyUniversity(result, yearOfStudy, hasPlacement, sector);
+      }
+      return result;
     }
 
     // Final year - check if in final year of study OR 0 years until grad
