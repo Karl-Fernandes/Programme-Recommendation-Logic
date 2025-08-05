@@ -519,6 +519,13 @@ export class SurveyProcessorService {
       return result;
     }
 
+    
+
+    // Final year - check if in final year of study OR 0 years until grad
+    if (isInFinalYear || yearsUntilGrad === 1) {
+      return this.processFinalYear(result, hasGradOffer, hasExperience || hasPlacement, sector);
+    }
+
     // 1 year until graduation (penultimate year) - only if NOT in final year of study
     if (yearsUntilGrad === 2 && !isInFinalYear) {
       result.primary_tab = 'Summer Internships';
@@ -530,31 +537,36 @@ export class SurveyProcessorService {
       return result;
     }
 
-    
-    // Final year - check if in final year of study OR 0 years until grad
-    if (isInFinalYear || yearsUntilGrad === 1) {
-      return this.processFinalYear(result, hasGradOffer, hasExperience || hasPlacement, sector);
-    }
-
-
     // Default fallback
     return this.defaultSpringWeeks(result, sector);
   }
 
   private processEarlyUniversity(result: EligibilityResult, yearOfStudy: number, hasPlacement: boolean, sector?: string): EligibilityResult {
     if (hasPlacement) {
-      if (sector == SECTORS.TECH)
       result.primary_tab = 'Industrial Placements';
       if (sector === SECTORS.TECH) {
-       result.commentary = {
-          [result.primary_tab]: COMMENTARY_TEXTS['Tech Industrial Placements Early Years'],
-          'Spring Weeks': COMMENTARY_TEXTS['Tech Insight Programmes More Than 2'],
-        };
-      } else {
-       
+        // Tech: Different secondary based on year
+        const secondaryTab = yearOfStudy === 2 ? null : 'Insight Programmes';
+        result.secondary_tabs = secondaryTab ? [secondaryTab] : [];
         result.commentary = {
-          [result.primary_tab]: COMMENTARY_TEXTS['Industrial Placements Early Years'],
-          'Spring Weeks': COMMENTARY_TEXTS['Spring Weeks More Than 2'],
+          [result.primary_tab]: yearOfStudy === 1 
+            ? COMMENTARY_TEXTS[this.getSectorCommentaryKey('Industrial Placements First Year', sector)]
+            : COMMENTARY_TEXTS[this.getSectorCommentaryKey('Industrial Placements Later Year', sector)]
+        };
+        if (secondaryTab) {
+          result.commentary[secondaryTab] = COMMENTARY_TEXTS['Tech Insight Programmes More Than 2'];
+        }
+      } else {
+        // Finance: Off-Cycle or Spring Weeks secondary
+        const secondaryTab = yearOfStudy === 2 ? 'Off-Cycle Internships' : 'Spring Weeks';
+        result.secondary_tabs = [secondaryTab];
+        result.commentary = {
+          [result.primary_tab]: yearOfStudy === 1 
+            ? COMMENTARY_TEXTS['Industrial Placements First Year']
+            : COMMENTARY_TEXTS['Industrial Placements Later Year'],
+          [secondaryTab]: yearOfStudy === 2 
+            ? COMMENTARY_TEXTS['Off-Cycle Internships']
+            : COMMENTARY_TEXTS['Spring Weeks More Than 2']
         };
       }
     } else {
