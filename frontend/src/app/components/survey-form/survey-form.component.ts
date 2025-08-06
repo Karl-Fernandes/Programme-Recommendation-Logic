@@ -1,5 +1,6 @@
 type CareerPathKey = 'Summer Internships' | 'Spring Weeks' | 'Insight Programmes' | 'Off-Cycle Internships' | 
-                     'Industrial Placements' | 'Graduate Schemes' | 'Pre-University';
+                     'Industrial Placements' | 'Graduate Schemes' | 'Pre-University' | 'Vacation Schemes' | 'Training Contracts' | 
+                     'First Year Schemes' | 'Non-Law Internships'
 
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -303,7 +304,15 @@ export class SurveyFormComponent {
     
     "Graduate Schemes": "Graduate schemes are full-time positions designed for recent graduates. Within the competitive areas of finance (investment banking, private equity, sales & trading etc), applying to graduate schemes is unrealistically competitive unless you have numerous previous internships. Graduate schemes at less competitive companies (e.g. smaller banks, big 4) or less competitive roles (e.g. risk, audit) are more attainable, but we generally advise against applying for graduate schemes at large banks for their competitive roles.",
     
-    "Pre-University": "The pre-university tab details every paid internship, work experience and apprenticeship programme available for high school students. The paid internships are an excellent way to build your resume as a school student, and the work experience programmes may sometimes convert to a spring week offer for when you begin university. Apprenticeships and degree apprenticeships are favourable options from a financial perspective, but often limit your ability to apply elsewhere and may pigeonhole you if you select a less desirable role."
+    "Pre-University": "The pre-university tab details every paid internship, work experience and apprenticeship programme available for high school students. The paid internships are an excellent way to build your resume as a school student, and the work experience programmes may sometimes convert to a spring week offer for when you begin university. Apprenticeships and degree apprenticeships are favourable options from a financial perspective, but often limit your ability to apply elsewhere and may pigeonhole you if you select a less desirable role.",
+
+    "Vacation Schemes": "Vacation schemes are 1-3 week paid internship programmes typically held during the Easter or summer holidays. These are primarily aimed at penultimate-year students and often lead to a training contract offer at the end of the scheme, subject to strong performance. Vacation schemes are the most effective and reliable route to securing a training contract and are often considered a prerequisite for applying directly to graduate programmes. Vacation schemes receive a high volume of applications among law opportunities, but they also offer the largest number of training contract outcomes.",
+
+    "Training Contracts": "Training contracts are two-year paid solicitor training programmes that begin after the completion of any required legal studies (such as the GDL or SQE). These are aimed at final-year students and graduates, and serve as the final step before qualification as a solicitor. Securing a training contract is essential to becoming a solicitor in England and Wales, and most firms recruit up to two years in advance. While highly competitive, training contracts represent the definitive route into the legal profession and are often offered to those who have previously completed a vacation scheme.",
+
+    "First Year Schemes": "First year schemes are short insight programmes, typically lasting 1–5 days and held during the Easter holidays. These are designed specifically for first-year law students or second-year students on a four-year course and provide early exposure to the legal profession. While they do not always lead directly to training contracts, they are a valuable stepping stone to vacation schemes and help build relationships with firms early in the recruitment process. First year schemes are highly competitive due to limited spaces but offer a strong advantage in future applications.",
+
+    "Non-Law Internships": "Non-law internships are short-term work experiences, typically lasting a few weeks to a few months, in industries such as consulting, finance, government, or policy. These are open to students from all backgrounds and are particularly useful for law students seeking to build commercial awareness and transferable skills. While they do not lead directly to training contracts, they strengthen future law firm applications and demonstrate a broader understanding of the legal industry's commercial context. Non-law internships are generally less competitive than vacation schemes and offer valuable experience for those exploring a career in law from different angles.",
   };
 
   getCareerDescription(path: string): string {

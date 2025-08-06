@@ -354,17 +354,17 @@ export class SurveyProcessorService {
   }
 
   private getSpringWeeksQuestionText(sector?: string): string {
-    if (sector === SECTORS.TECH) {
-      return "Have you attended any insight programmes?";
+    if (sector === SECTORS.TECH || sector === SECTORS.LAW) {
+      return "Have you attended any Insight Programmes?";
     }
-    return "Have you attended any spring weeks?";
+    return "Have you attended any Spring Weeks?";
   }
 
   private getConversionQuestionText(sector?: string): string {
     if (sector === SECTORS.TECH) {
-      return "Did you convert your insight programme to a summer internship?";
+      return "Did you convert your Insight Programme to a Summer Internship?";
     }
-    return "Did you convert your spring week to a summer internship?";
+    return "Did you convert your Spring Week to a Summer Internship?";
   }
 
   private getCurrentAcademicYear(): number {
@@ -439,7 +439,9 @@ export class SurveyProcessorService {
 
     // Default case
     result.primary_tab = 'Pre-University';
-    result.commentary = { [result.primary_tab]: COMMENTARY_TEXTS['Pre-University'] };
+    result.commentary = { 
+      [result.primary_tab]: COMMENTARY_TEXTS[this.getSectorCommentaryKey('High School', sector)]
+    };
     return result;
   }
 
@@ -448,8 +450,9 @@ export class SurveyProcessorService {
     
     const sectorKey = sector === SECTORS.TECH ? `Tech ${baseKey}` :
                      sector === SECTORS.LAW ? `Law ${baseKey}` :
+                     sector === SECTORS.FINANCE ? `Finance ${baseKey}` :
                      baseKey;
-    
+
     // Check if sector-specific key exists, fallback to base key
     return (sectorKey in COMMENTARY_TEXTS) ? 
            sectorKey as keyof typeof COMMENTARY_TEXTS : 
@@ -460,7 +463,7 @@ export class SurveyProcessorService {
     result.primary_tab = 'Pre-University';
     result.secondary_tabs = [];
     result.commentary = { 
-      [result.primary_tab]: COMMENTARY_TEXTS[this.getSectorCommentaryKey('Pre-University', sector)]
+      [result.primary_tab]: COMMENTARY_TEXTS[this.getSectorCommentaryKey('High School', sector)]
     };
     return result;
   }
@@ -497,48 +500,93 @@ export class SurveyProcessorService {
     // Year 2 + industrial placement (highest priority - regardless of years until graduation)
     if (yearOfStudy === 2 && hasPlacement) {
       result.primary_tab = 'Industrial Placements';
-      // No secondary tabs for both Tech and Finance
-      result.secondary_tabs = [];
-      result.commentary = {
-        [result.primary_tab]: COMMENTARY_TEXTS['Industrial Placements']
-      };
+
+      if (sector === SECTORS.FINANCE) {
+        result.secondary_tabs = ['Off-Cycle Internships'];
+        result.commentary = {
+          [result.primary_tab]: COMMENTARY_TEXTS['Finance Two Years Out Industrial Placement'],
+          [result.secondary_tabs[0]]:  COMMENTARY_TEXTS['Finance Two Years Out Off-Cycle Internship']
+        };
+
+      } else {
+        // Process tech instead
+        result.secondary_tabs = [];
+        result.commentary = {
+          [result.primary_tab]: COMMENTARY_TEXTS['Tech Two Years Out Industrial Placement']
+        };
+      }
       return result;
     }
   
     // Exactly 2 years until graduation (standard case)
     if (yearsUntilGrad === 2) {
-      if (sector === SECTORS.TECH) {
-        if (hasPlacement) {
-          // Tech with placement: Industrial Placements primary, Insight Programmes secondary
-          result.primary_tab = 'Industrial Placements';
-          result.secondary_tabs = ['Insight Programmes'];
-          result.commentary = {
-            [result.primary_tab]: COMMENTARY_TEXTS['Tech Industrial Placements'],
-            'Insight Programmes': COMMENTARY_TEXTS['Tech Insight Programmes']
-          };
-        } else {
-          // Tech without placement: Insight Programmes primary, no secondary
-          result.primary_tab = 'Insight Programmes';
-          result.secondary_tabs = [];
-          result.commentary = {
-            [result.primary_tab]: COMMENTARY_TEXTS['Tech Insight Programmes']
-          };
-        }
+      // Finance sector: 2 years out
+      if (sector === SECTORS.FINANCE) {
+      if (hasPlacement) {
+        // Finance with placement: Industrial Placements primary, Spring Weeks secondary
+        result.primary_tab = 'Industrial Placements';
+        result.secondary_tabs = ['Spring Weeks'];
+        result.commentary = {
+        [result.primary_tab]: COMMENTARY_TEXTS[this.getSectorCommentaryKey('Two Years Out Spring', sector)]
+        };
       } else {
-        // Finance: Use early university logic
-        return this.processEarlyUniversity(result, yearOfStudy, hasPlacement, sector);
+        // Finance without placement: Spring Weeks primary, no secondary
+        result.primary_tab = 'Spring Weeks';
+        result.secondary_tabs = [];
+        result.commentary = {
+        [result.primary_tab]: COMMENTARY_TEXTS[this.getSectorCommentaryKey('Two Years Out Spring', sector)]
+        };
+      }
+      } else if (sector === SECTORS.TECH) {
+      if (hasPlacement) {
+        // Tech with placement: Industrial Placements primary, Insight Programmes secondary
+        result.primary_tab = 'Industrial Placements';
+        result.secondary_tabs = ['Insight Programmes'];
+        result.commentary = {
+        [result.secondary_tabs[0]]: COMMENTARY_TEXTS['Tech Two Years From Grad']
+        };
+      } else {
+        // Tech without placement: Insight Programmes primary, no secondary
+        result.primary_tab = 'Insight Programmes';
+        result.secondary_tabs = [];
+        result.commentary = {
+        [result.primary_tab]: COMMENTARY_TEXTS['Tech Two Years From Grad']
+        };
+      }
+      } else if (sector === SECTORS.LAW) {
+      result.primary_tab = 'First Year Programmes';
+      result.secondary_tabs = [];
+      result.commentary = {
+        [result.primary_tab]: COMMENTARY_TEXTS['Law Two Years Out FYP']
+      };
       }
       return result;
     }
 
     // 1 year until graduation (penultimate year) - only if NOT in final year of study
     if (yearsUntilGrad === 1 && !isInFinalYear) {
+      if (sector === SECTORS.FINANCE) {
       result.primary_tab = 'Summer Internships';
-      result.secondary_tabs = [sector === SECTORS.TECH ? 'Insight Programmes' : 'Spring Weeks'];
+      result.secondary_tabs = ['Spring Weeks'];
       result.commentary = {
-        [result.primary_tab]: COMMENTARY_TEXTS[this.getSectorCommentaryKey('Summer Internships', sector)],
-        [result.secondary_tabs[0]]: COMMENTARY_TEXTS[this.getSectorCommentaryKey('Summer Internships Masters Backup', sector)]
+        [result.primary_tab]: COMMENTARY_TEXTS[this.getSectorCommentaryKey('Penultimate Summer Internship', sector)],
+        [result.secondary_tabs[0]]: COMMENTARY_TEXTS[this.getSectorCommentaryKey('Penultimate Spring Week', sector)]
       };
+      } else if (sector === SECTORS.TECH) {
+      result.primary_tab = 'Summer Internships';
+      result.secondary_tabs = ['Insight Programmes'];
+      result.commentary = {
+        [result.primary_tab]: COMMENTARY_TEXTS[this.getSectorCommentaryKey('Penultimate Summer Internship', sector)],
+        [result.secondary_tabs[0]]: COMMENTARY_TEXTS[this.getSectorCommentaryKey('Penultimate Spring Week', sector)]
+      };
+      } else if (sector === SECTORS.LAW) {
+      result.primary_tab = 'Vacation Schemes';
+      result.secondary_tabs = ['Non-Law Internships'];
+      result.commentary = {
+        [result.primary_tab]: COMMENTARY_TEXTS['Law Penultimate Vacation'],
+        [result.secondary_tabs[0]]: COMMENTARY_TEXTS['Law Penultimate Non-Law Internships']
+      };
+      }
       return result;
     }
 
@@ -547,7 +595,6 @@ export class SurveyProcessorService {
     if (isInFinalYear || yearsUntilGrad === 0) {
       return this.processFinalYear(result, hasGradOffer, hasExperience || hasPlacement, sector);
     }
-
     
     // Default fallback
     return this.processEarlyUniversity(result, yearOfStudy, hasPlacement, sector);
@@ -557,45 +604,44 @@ export class SurveyProcessorService {
     if (hasPlacement) {
       // Placement students: Industrial Placements primary, Spring Weeks/Insight Programmes secondary
       result.primary_tab = 'Industrial Placements';
-      
-      if (sector === SECTORS.TECH) {
-        result.secondary_tabs = ['Insight Programmes'];
-        result.commentary = {
-          [result.primary_tab]: yearOfStudy === 1 
-            ? COMMENTARY_TEXTS[this.getSectorCommentaryKey('Industrial Placements First Year', sector)]
-            : COMMENTARY_TEXTS[this.getSectorCommentaryKey('Industrial Placements Later Year', sector)],
-          [result.secondary_tabs[0]]: yearOfStudy === 1
-            ? COMMENTARY_TEXTS['Tech Insight Programmes More Than 2']
-            : COMMENTARY_TEXTS['Tech Insight Programmes']
-        };
-      } else {
+
+      if (sector === SECTORS.FINANCE) {
         result.secondary_tabs = ['Spring Weeks'];
         result.commentary = {
-          [result.primary_tab]: yearOfStudy === 1 
-            ? COMMENTARY_TEXTS['Industrial Placements First Year']
-            : COMMENTARY_TEXTS['Industrial Placements Later Year'],
-          [result.secondary_tabs[0]]: yearOfStudy === 1
-            ? COMMENTARY_TEXTS['Spring Weeks More Than 2']
-            : COMMENTARY_TEXTS['Spring Weeks']
+          [result.secondary_tabs[0]]: COMMENTARY_TEXTS[this.getSectorCommentaryKey('More Than Two Years Out Spring', sector)]
+        };
+      } else if (sector === SECTORS.TECH) {
+        result.secondary_tabs = ['Insight Programmes'];
+        result.commentary = {
+          [result.secondary_tabs[0]]: COMMENTARY_TEXTS['Tech More Than Two Years Out Spring']
+        };
+      } else if (sector === SECTORS.LAW) {
+        // Law sector
+        result.secondary_tabs = ['Spring Weeks'];
+        result.commentary = {
+          [result.secondary_tabs[0]]: COMMENTARY_TEXTS[this.getSectorCommentaryKey('More Than Two Years Out Spring', sector)]
         };
       }
     } else {
       // No placement: Spring Weeks/Insight Programmes primary, no secondary
-      if (sector === SECTORS.TECH) {
-        result.primary_tab = 'Insight Programmes';
-        result.secondary_tabs = [];
-        result.commentary = { 
-          [result.primary_tab]: yearOfStudy === 1
-            ? COMMENTARY_TEXTS['Tech Insight Programmes More Than 2'] 
-            : COMMENTARY_TEXTS['Tech Insight Programmes']
-        };
-      } else {
+      if (sector === SECTORS.FINANCE) {
         result.primary_tab = 'Spring Weeks';
         result.secondary_tabs = [];
         result.commentary = { 
-          [result.primary_tab]: yearOfStudy === 1
-            ? COMMENTARY_TEXTS['Tech Insight Programmes More Than 2']
-            : COMMENTARY_TEXTS['Tech Insight Programmes']
+          [result.primary_tab]: COMMENTARY_TEXTS[this.getSectorCommentaryKey('More Than Two Years Out Spring', sector)]
+        };
+      } else if (sector === SECTORS.TECH) {
+        result.primary_tab = 'Insight Programmes';
+        result.secondary_tabs = [];
+        result.commentary = { 
+          [result.primary_tab]: COMMENTARY_TEXTS['Tech More Than Two Years Out Spring']
+        };
+      } else if (sector === SECTORS.LAW) {
+        // Law sector
+        result.primary_tab = 'First Year Schemes';
+        result.secondary_tabs = [];
+        result.commentary = {
+          [result.primary_tab]: COMMENTARY_TEXTS['Law More Than Two Years Out FYP']
         };
       }
     }
@@ -603,32 +649,15 @@ export class SurveyProcessorService {
   }
 
   private processFinalYear(result: EligibilityResult, hasGradOffer: boolean, hasRelevantExperience: boolean, sector?: string): EligibilityResult {
-    if (sector === SECTORS.TECH) {
-      return this.processTechFinalYear(result, hasGradOffer, hasRelevantExperience);
-    } else {
+    if (sector === SECTORS.FINANCE) {
       return this.processFinanceFinalYear(result, hasGradOffer, hasRelevantExperience);
+    } else if (sector === SECTORS.TECH) {
+      return this.processTechFinalYear(result, hasGradOffer, hasRelevantExperience);
+    } else if (sector === SECTORS.LAW) {
+      return this.processFinalLawYear(result, hasGradOffer, hasRelevantExperience);
     }
-  }
-
-  private processTechFinalYear(result: EligibilityResult, hasGradOffer: boolean, hasRelevantExperience: boolean): EligibilityResult {
-    if (hasGradOffer) {
-      result.primary_tab = 'Graduate Schemes';
-      result.secondary_tabs = ['Summer Internships'];
-      result.commentary = {
-        [result.primary_tab]: COMMENTARY_TEXTS['Tech Graduate Schemes'],
-        'Summer Internships': COMMENTARY_TEXTS['Tech Graduate Schemes Summer Internship']
-      };
-    } else {
-      // Both cases (with/without experience) use same logic for tech
-      result.primary_tab = 'Graduate Schemes';
-      result.secondary_tabs = ['Summer Internships'];
-      result.commentary = {
-        [result.primary_tab]: hasRelevantExperience ? 
-          COMMENTARY_TEXTS['Tech Graduate Schemes Final Year Experience'] : 
-          COMMENTARY_TEXTS['Tech Graduate Schemes Final Year No Experience'],
-        'Summer Internships': COMMENTARY_TEXTS['Tech Summer Internships Final Year Experience']
-      };
-    }
+    
+    // Add default return statement
     return result;
   }
 
@@ -637,55 +666,93 @@ export class SurveyProcessorService {
       result.primary_tab = 'Graduate Schemes';
       result.secondary_tabs = ['Summer Internships', 'Off-Cycle Internships'];
       result.commentary = {
-        [result.primary_tab]: COMMENTARY_TEXTS['Graduate Schemes'],
-        'Summer Internships': COMMENTARY_TEXTS['Summer Internships Masters Final Year'],
-        'Off-Cycle Internships': COMMENTARY_TEXTS['Off-Cycle Internships Final Year']
+        [result.primary_tab]: COMMENTARY_TEXTS['Finance Final Year Grad Offer Grad Scheme'],
+        'Summer Internships': COMMENTARY_TEXTS['Finance Final Year Grad Offer Summer Internship'],
+        'Off-Cycle Internships': COMMENTARY_TEXTS['Finance Final Year Grad Offer Off-Cycle Internship']
       };
     } else if (hasRelevantExperience) {
       result.primary_tab = 'Off-Cycle Internships';
       result.secondary_tabs = ['Summer Internships', 'Graduate Schemes'];
       result.commentary = {
-        [result.primary_tab]: COMMENTARY_TEXTS['Final Year No Offer Exp'],
-        'Summer Internships': COMMENTARY_TEXTS['Summer Internships Final Year Experience'],
-        'Graduate Schemes': COMMENTARY_TEXTS['Graduate Schemes Final Year Experience']
+        [result.primary_tab]: COMMENTARY_TEXTS['Finance Final Year With Exp Off-Cycle Internship'],
+        'Summer Internships': COMMENTARY_TEXTS['Finance Final Year With Exp Summer Internship'],
+        'Graduate Schemes': COMMENTARY_TEXTS['Finance Final Year With Exp Grad Scheme']
       };
     } else {
       result.primary_tab = 'Summer Internships';
       result.secondary_tabs = ['Off-Cycle Internships', 'Graduate Schemes'];
       result.commentary = {
-        [result.primary_tab]: COMMENTARY_TEXTS['Final Year No Offer No Exp'],
-        'Graduate Schemes': COMMENTARY_TEXTS['Graduate Schemes Final Year No Experience'],
-        'Off-Cycle Internships': COMMENTARY_TEXTS['Off-Cycle Internships Final Year No Experience']
+        [result.primary_tab]: COMMENTARY_TEXTS['Finance Final Year No Exp Summer Internship'],
+        'Graduate Schemes': COMMENTARY_TEXTS['Finance Final Year No Exp Grad Scheme'],
+        'Off-Cycle Internships': COMMENTARY_TEXTS['Finance Final Year No Exp Off-Cycle Internship']
       };
     }
     return result;
   }
 
-  private processGraduate(result: EligibilityResult, hasRelevantExperience: boolean, sector?: string): EligibilityResult {
-    if (sector === SECTORS.TECH) {
-      // Tech: Always Graduate Schemes only
+  private processTechFinalYear(result: EligibilityResult, hasGradOffer: boolean, hasRelevantExperience: boolean): EligibilityResult {
+    if (hasGradOffer) {
       result.primary_tab = 'Graduate Schemes';
-      result.secondary_tabs = [];
+      result.secondary_tabs = ['Summer Internships'];
       result.commentary = {
-        [result.primary_tab]: COMMENTARY_TEXTS['Tech Graduated No Exp']
+        [result.primary_tab]: COMMENTARY_TEXTS['Tech Final Year Grad Offer Grad Scheme'],
+        [result.secondary_tabs[0]]: COMMENTARY_TEXTS['Tech Final Year Grad Offer Summer Internship']
       };
     } else {
+      result.primary_tab = 'Graduate Schemes';
+      result.secondary_tabs = ['Summer Internships'];
+      result.commentary = {
+        [result.primary_tab]: COMMENTARY_TEXTS['Tech Final Year Grad Scheme'],
+        [result.secondary_tabs[0]]: COMMENTARY_TEXTS['Tech Final Year Summer Internship']
+      };
+    }
+    return result;
+  }
+
+  private processFinalLawYear(result: EligibilityResult, hasGradOffer: boolean, hasRelevantExperience: boolean): EligibilityResult {
+    result.primary_tab = 'Training Contracts';
+    result.secondary_tabs = ['Vacation Schemes'];
+    result.commentary = {
+      [result.primary_tab]: COMMENTARY_TEXTS['Law Final Year Training Contracts'],
+      [result.secondary_tabs[0]]: COMMENTARY_TEXTS['Law Final Year Vacation']
+    };
+    return result;
+  }
+
+  private processGraduate(result: EligibilityResult, hasRelevantExperience: boolean, sector?: string): EligibilityResult {
+    if (sector === SECTORS.FINANCE) {
       // Finance: Different logic based on experience
       if (hasRelevantExperience) {
         result.primary_tab = 'Off-Cycle Internships';
         result.secondary_tabs = ['Graduate Schemes'];
         result.commentary = {
-          [result.primary_tab]: COMMENTARY_TEXTS['Graduated Exp'],
-          'Graduate Schemes': COMMENTARY_TEXTS['Graduated Exp Secondary']
+          [result.primary_tab]: COMMENTARY_TEXTS['Finance Grad With Exp Off-Cycle Internship'],
+          'Graduate Schemes': COMMENTARY_TEXTS['Finance Grad With Exp Grad Scheme']
         };
       } else {
         result.primary_tab = 'Graduate Schemes';
         result.secondary_tabs = ['Off-Cycle Internships'];
         result.commentary = {
-          [result.primary_tab]: COMMENTARY_TEXTS['Graduated No Exp'],
-          'Off-Cycle Internships': COMMENTARY_TEXTS['Off-Cycle Internships Grad No Exp']
+          [result.primary_tab]: COMMENTARY_TEXTS['Finance Grad No Exp Grad Scheme'],
+          'Off-Cycle Internships': COMMENTARY_TEXTS['Finance Grad No Exp Off-Cycle Internship']
         };
       }
+    } else if (sector === SECTORS.TECH) {
+      // Tech: Always Graduate Schemes only
+      result.primary_tab = 'Graduate Schemes';
+      result.secondary_tabs = [];
+      result.commentary = {
+        [result.primary_tab]: hasRelevantExperience
+          ? COMMENTARY_TEXTS['Tech Grad Exp Grad Scheme']
+          : COMMENTARY_TEXTS['Tech Grad No Exp Grad Scheme']
+      };
+    } else if (sector === SECTORS.LAW) {
+      // Law sector
+      result.primary_tab = 'Training Contracts';
+      result.secondary_tabs = [];
+      result.commentary = {
+        [result.primary_tab]: COMMENTARY_TEXTS['Law Grad Training Contracts']
+      };
     }
     return result;
   }

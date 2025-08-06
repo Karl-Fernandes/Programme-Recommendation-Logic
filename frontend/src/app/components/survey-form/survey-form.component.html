@@ -71,7 +71,7 @@
           </select>
         </div>
 
-        <div *ngIf="hasPlacementOption" class="checkbox-container">
+        <div *ngIf="hasPlacementOption && surveyData.sector !== 'Law'" class="checkbox-container">
           <label>
             <input type="checkbox" [(ngModel)]="surveyData.has_placement" name="has_placement">
             I have an industrial placement year in my course
