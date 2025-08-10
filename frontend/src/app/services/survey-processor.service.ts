@@ -378,7 +378,16 @@ export class SurveyProcessorService {
     if (!graduationYear) return null;
     
     const academicYear = this.getCurrentAcademicYear();
-    return graduationYear - academicYear;
+    const yearsUntilGrad = graduationYear - academicYear - 1;
+    
+    console.log('Academic Year Calculation:', {
+      currentDate: new Date(),
+      academicYear: academicYear,
+      graduationYear: graduationYear,
+      yearsUntilGraduation: yearsUntilGrad
+    });
+    
+    return yearsUntilGrad;
   }
 
   calculateYearOfStudy(surveyData: any): number {
