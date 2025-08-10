@@ -370,7 +370,7 @@ export class SurveyProcessorService {
   private getCurrentAcademicYear(): number {
     const currentDate = new Date();
     // Academic year starts in July, so if we're before July (month < 6), use previous year
-    return currentDate.getMonth() < 6 ? currentDate.getFullYear() - 1 : currentDate.getFullYear();
+    return currentDate.getMonth() < 5 ? currentDate.getFullYear() - 1 : currentDate.getFullYear();
   }
 
   private calculateYearsUntilGraduation(surveyData: any): number | null {
